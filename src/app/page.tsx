@@ -1,9 +1,9 @@
-import Clocks from "./components/Clocks";
+import ClockCollection from "./components/ClockCollection";
 
 export default function Home() {
   return (
     <div className="min-h-screen w-full p-0 m-0 overflow-hidden">
-      <Clocks mainClockSize={360} smallClockCount={42} />
+      <ClockCollection mainClockSize={420} smallClockCount={24} />
     </div>
   );
 }
