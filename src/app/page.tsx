@@ -1,3 +1,5 @@
+'use client';
+
 import ClockCollection from "./components/ClockCollection";
 
 export default function Home() {
