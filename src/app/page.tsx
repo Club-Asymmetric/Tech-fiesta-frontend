@@ -1,3 +1,5 @@
+'use client';
+
 import ClockCollection from "./components/ClockCollection";
 import Clocks from "./components/Clocks";
 
