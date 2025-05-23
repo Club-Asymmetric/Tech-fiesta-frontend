@@ -10,7 +10,7 @@ interface ClockCollectionProps {
 
 const ClockCollection = ({ 
   mainClockSize = 400, 
-  smallClockCount = 20 
+  smallClockCount = 10 
 }: ClockCollectionProps) => {
   // Initialize with null to avoid hydration mismatch
   const [viewportSize, setViewportSize] = useState<{ width: number, height: number } | null>(null);
@@ -37,39 +37,45 @@ const ClockCollection = ({
       seed = (seed * 9301 + 49297) % 233280;
       return seed / 233280;
     };
-  };
-  // Generate clock positions and sizes
+  };  // Generate clock positions and sizes in a more structured layout
   const generateClocks = () => {
     const clocks = [];
-    const safeZone = mainClockSize * 0.7;
     // Use default values if viewportSize is null (during SSR)
     const width = viewportSize?.width || 1200;
     const height = viewportSize?.height || 800;
-    const maxX = width * 0.9;
-    const maxY = height * 0.9;
     
-    // Size ranges for small clocks
-    const minSize = 100;
-    const maxSize = 200;
+    // Size ranges for small clocks - more variation
+    const sizes = [80, 100, 120, 140, 160, 180, 200, 220, 240, 260];
     
-    // Create a seeded random generator (fixed seed for consistency)
-    const random = seededRandom(12345);
+    // Distribute clocks in specific positions around the page
+    const positions = [
+      // Top row
+      { xPercent: -0.8, yPercent: -0.6, size: sizes[0] },
+      { xPercent: 0, yPercent: -0.7, size: sizes[1] },
+      { xPercent: 0.8, yPercent: -0.6, size: sizes[2] },
+      
+      // Middle row (sides)
+      { xPercent: -0.85, yPercent: 0, size: sizes[3] },
+      { xPercent: 0.85, yPercent: 0, size: sizes[4] },
+      
+      // Bottom row
+      { xPercent: -0.8, yPercent: 0.6, size: sizes[5] },
+      { xPercent: 0, yPercent: 0.7, size: sizes[6] },
+      { xPercent: 0.8, yPercent: 0.6, size: sizes[7] },
+      
+      // Corners
+      { xPercent: -0.7, yPercent: -0.5, size: sizes[8] },
+      { xPercent: 0.7, yPercent: 0.5, size: sizes[9] },
+    ];
     
-    // Generate positions for small clocks
-    for (let i = 0; i < smallClockCount; i++) {
-      // Use seed-based random position, avoiding center
-      let x, y, distanceFromCenter;
+    // Generate the specified number of clocks based on positions
+    for (let i = 0; i < Math.min(smallClockCount, positions.length); i++) {
+      const position = positions[i];
+      const x = position.xPercent * (width / 2);
+      const y = position.yPercent * (height / 2);
+      const size = position.size;
       
-      do {
-        x = random() * maxX - (maxX / 2);
-        y = random() * maxY - (maxY / 2);
-        distanceFromCenter = Math.sqrt(x * x + y * y);
-      } while (distanceFromCenter < safeZone);
-      
-      // Random size (larger than before) using seeded random
-      const size = Math.floor(minSize + random() * (maxSize - minSize));
-      
-      // Scale hand thickness proportionally
+      // Scale hand thickness proportionally to clock size
       const hourHandThickness = size / 90;  
       const minuteHandThickness = size / 130;
       const secondHandThickness = size / 180;
@@ -85,8 +91,7 @@ const ClockCollection = ({
     }
     
     return clocks;
-  };
-  // Only generate clocks on the client side
+  };  // Only generate clocks on the client side
   // Use memo to avoid recalculating on every render
   const smallClocks = React.useMemo(() => {
     // Only generate clocks if we're in the browser
@@ -94,7 +99,7 @@ const ClockCollection = ({
       return generateClocks();
     }
     return [];
-  }, [viewportSize?.width, viewportSize?.height]);
+  }, [viewportSize?.width, viewportSize?.height, smallClockCount]);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
