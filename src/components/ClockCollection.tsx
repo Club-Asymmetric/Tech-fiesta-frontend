@@ -6,16 +6,17 @@ import AnalogClock from './AnalogClock';
 interface ClockCollectionProps {
   mainClockSize?: number;
   smallClockCount?: number;
+  onReady?: () => void;
 }
 
 const ClockCollection = ({ 
   mainClockSize = 400, 
-  smallClockCount = 20 
+  smallClockCount = 20,
+  onReady
 }: ClockCollectionProps) => {
   // Initialize with null to avoid hydration mismatch
   const [viewportSize, setViewportSize] = useState<{ width: number, height: number } | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-
   // Set viewport size only once on mount
   useEffect(() => {
     if (!isInitialized && typeof window !== 'undefined') {
@@ -26,6 +27,18 @@ const ClockCollection = ({
       setIsInitialized(true);
     }
   }, [isInitialized]);
+
+  // Call onReady when component is fully initialized
+  useEffect(() => {
+    if (isInitialized && viewportSize && onReady) {
+      // Small delay to ensure all initialization is complete
+      const timer = setTimeout(() => {
+        onReady();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialized, viewportSize, onReady]);
 
   // Calculate responsive sizes based on viewport
   const getResponsiveSizes = () => {

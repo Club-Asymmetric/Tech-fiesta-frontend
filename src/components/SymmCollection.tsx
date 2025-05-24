@@ -6,17 +6,18 @@ import AnalogClock from './AnalogClock';
 interface ClockCollectionProps {
   mainClockSize?: number;
   smallClockCount?: number;
+  onReady?: () => void;
 }
 
 const SymmCollection = ({ 
   mainClockSize = 400, 
-  smallClockCount = 20 
+  smallClockCount = 20,
+  onReady
 }: ClockCollectionProps) => {
   // Initialize with null to avoid hydration mismatch
   const [viewportSize, setViewportSize] = useState<{ width: number, height: number } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [currentSymmetry, setCurrentSymmetry] = useState<string>('');
-
   // Update viewport size on window resize
   useEffect(() => {
     const handleResize = () => {
@@ -32,6 +33,18 @@ const SymmCollection = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Call onReady when component is fully initialized
+  useEffect(() => {
+    if (viewportSize && onReady) {
+      // Small delay to ensure all initialization is complete
+      const timer = setTimeout(() => {
+        onReady();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [viewportSize, onReady]);
 
   // Pseudo-random number generator with seed for stable values across server and client
   const seededRandom = (seed: number) => {

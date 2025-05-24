@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 
 interface LoadingScreenProps {
   onLoadingComplete?: () => void;
-  minimumLoadTime?: number;
+  loadingTasks?: {
+    name: string;
+    completed: boolean;
+  }[];
+  minimumDisplayTime?: number;
 }
 
 // Predefined positions and animations to avoid hydration issues
@@ -33,50 +37,83 @@ const backgroundClocks = [
 
 const LoadingScreen = ({ 
   onLoadingComplete, 
-  minimumLoadTime = 2000 
+  loadingTasks = [],
+  minimumDisplayTime = 800 
 }: LoadingScreenProps) => {
-  const [progress, setProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const [isMounted, setIsMounted] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);  const [hasMinimumTimeElapsed, setHasMinimumTimeElapsed] = useState(false);
+  const [initialProgress, setInitialProgress] = useState(20); // Start with some initial progress
+  
+  // Calculate progress based on completed tasks
+  const completedTasks = loadingTasks.filter(task => task.completed).length;
+  const totalTasks = loadingTasks.length;
+  
+  // Calculate base progress from completed tasks
+  const taskProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  
+  // Show minimum initial progress if no tasks completed yet, otherwise show task progress
+  const progress = taskProgress === 0 ? initialProgress : taskProgress;
+  
+  const allTasksCompleted = totalTasks > 0 && completedTasks === totalTasks;
   useEffect(() => {
     // Prevent scroll during loading
     document.body.style.overflow = 'hidden';
-    
     setIsMounted(true);
     
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const newProgress = Math.min((elapsed / minimumLoadTime) * 100, 100);
-      setProgress(newProgress);
-
-      if (newProgress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => {
-          // Always scroll to top after loading
-          document.body.style.overflow = '';
-          window.scrollTo(0, 0);
-          
-          setIsVisible(false);
-          onLoadingComplete?.();
-        }, 500);
-      }
-    }, 50);
-
+    // Set minimum display time
+    const timer = setTimeout(() => {
+      setHasMinimumTimeElapsed(true);
+    }, minimumDisplayTime);
+    
     return () => {
-      clearInterval(interval);
-      // Cleanup on unmount
+      clearTimeout(timer);
       document.body.style.overflow = '';
     };
-  }, [minimumLoadTime, onLoadingComplete]);
-
+  }, [minimumDisplayTime]);
+  // Gradually increase initial progress when no tasks are completed
+  useEffect(() => {
+    if (completedTasks === 0) {
+      const interval = setInterval(() => {
+        setInitialProgress(prev => {
+          const increment = Math.random() * 2 + 1; // Random increment between 1-3
+          const nextProgress = prev + increment;
+          return nextProgress > 50 ? 50 : nextProgress; // Cap at 50% for initial progress
+        });
+      }, 100); // Slightly slower updates for smoother animation
+      
+      return () => clearInterval(interval);
+    }
+  }, [completedTasks]);
+    // Handle completion when all tasks are done and minimum time has elapsed
+  useEffect(() => {
+    if (allTasksCompleted && hasMinimumTimeElapsed) {
+      // Always scroll to top before starting transition
+      window.scrollTo(0, 0);
+      
+      // Start fade out transition
+      setIsTransitioning(true);
+      
+      setTimeout(() => {
+        // Restore scroll and hide loading screen
+        document.body.style.overflow = '';
+        setIsVisible(false);
+        
+        // Call completion callback immediately
+        onLoadingComplete?.();
+      }, 300); // Reduced transition duration for smoother experience
+    }
+  }, [allTasksCompleted, hasMinimumTimeElapsed, onLoadingComplete]);
   if (!isVisible) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-      {/* Background pattern of small clocks */}
-      {isMounted && (
-        <div className="absolute inset-0 opacity-10">
+  return (    <div 
+      className={`fixed inset-0 z-50 bg-black flex items-center justify-center transition-all duration-300 ease-in-out ${
+        isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+      }`}
+    >{/* Background pattern of small clocks */}
+      {isMounted && (        <div className={`absolute inset-0 opacity-10 transition-opacity duration-300 ${
+          isTransitioning ? 'opacity-0' : 'opacity-10'
+        }`}>
           {backgroundClocks.map((clock, i) => (
             <div
               key={i}
@@ -100,10 +137,9 @@ const LoadingScreen = ({
             </div>
           ))}
         </div>
-      )}
-
-      {/* Main loading clock */}
-      <div className="relative z-10 flex flex-col items-center">
+      )}      {/* Main loading clock */}      <div className={`relative z-10 flex flex-col items-center transition-all duration-300 ${
+        isTransitioning ? 'opacity-0 transform translate-y-4 scale-95' : 'opacity-100 transform translate-y-0 scale-100'
+      }`}>
         <div className="relative">
           {/* Main clock face */}
           <div className="w-32 h-32 rounded-full border-4 border-white bg-black shadow-lg shadow-blue-500/20 relative">
@@ -119,28 +155,29 @@ const LoadingScreen = ({
                   transform: `translateX(-50%) rotate(${i * 30}deg)`,
                 }}
               />
-            ))}
-
-            {/* Animated clock hands */}
+            ))}            {/* Animated clock hands */}
             <div 
               className="absolute w-1 h-8 bg-white top-1/2 left-1/2 origin-bottom"
               style={{
-                transform: 'translate(-50%, -100%)',
+                transform: 'translate(-50%, -100%) rotate(0deg)',
                 animation: 'hourHand 4s linear infinite',
+                animationDelay: '0s',
               }}
             />
             <div 
               className="absolute w-0.5 h-10 bg-white top-1/2 left-1/2 origin-bottom"
               style={{
-                transform: 'translate(-50%, -100%)',
+                transform: 'translate(-50%, -100%) rotate(90deg)',
                 animation: 'minuteHand 3s linear infinite',
+                animationDelay: '0s',
               }}
             />
             <div 
               className="absolute w-0.5 h-12 bg-red-500 top-1/2 left-1/2 origin-bottom"
               style={{
-                transform: 'translate(-50%, -100%)',
+                transform: 'translate(-50%, -100%) rotate(180deg)',
                 animation: 'secondHand 1s linear infinite',
+                animationDelay: '0s',
               }}
             />
 
@@ -193,18 +230,16 @@ const LoadingScreen = ({
             {Math.round(progress)}%
           </div>
         </div>
-      </div>
-
-      {/* CSS Animations */}
+      </div>      {/* CSS Animations */}
       <style jsx>{`
         @keyframes secondHand {
-          0% { transform: translate(-50%, -100%) rotate(0deg); }
-          100% { transform: translate(-50%, -100%) rotate(360deg); }
+          0% { transform: translate(-50%, -100%) rotate(180deg); }
+          100% { transform: translate(-50%, -100%) rotate(540deg); }
         }
         
         @keyframes minuteHand {
-          0% { transform: translate(-50%, -100%) rotate(0deg); }
-          100% { transform: translate(-50%, -100%) rotate(360deg); }
+          0% { transform: translate(-50%, -100%) rotate(90deg); }
+          100% { transform: translate(-50%, -100%) rotate(450deg); }
         }
         
         @keyframes hourHand {
