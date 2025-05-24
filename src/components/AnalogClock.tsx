@@ -42,15 +42,15 @@ function AnalogClock({
   const markerHeight = 15 * scale;
   const markerDistance = (size / 2) - (20 * scale); // Distance from center to marker
   const centerDotSize = 12 * scale;
-  const borderWidth = 4 * scale;
+  const borderWidth = Math.max(2, 4 * scale); // Ensure minimum border width
   
   // Special marker positions for 12, 3, 6, 9 o'clock
   const specialMarkerPositions = [0, 3, 6, 9];
   
-  // Scale thickness of hands
-  const scaledHourHandThickness = hourHandThickness * scale;
-  const scaledMinuteHandThickness = minuteHandThickness * scale;
-  const scaledSecondHandThickness = secondHandThickness * scale;
+  // Scale thickness of hands with minimums to ensure visibility
+  const scaledHourHandThickness = Math.max(1, hourHandThickness * scale);
+  const scaledMinuteHandThickness = Math.max(0.8, minuteHandThickness * scale);
+  const scaledSecondHandThickness = Math.max(0.5, secondHandThickness * scale);
 
   // Calculate rotation degrees - only if time is available
   let secondDegrees = 0;
@@ -63,8 +63,22 @@ function AnalogClock({
     hourDegrees = (time.getHours() % 12) * 30 + time.getMinutes() * 0.5;
   }
 
+  // Don't render anything until mounted to avoid hydration issues
+  if (!mounted) {
+    return (
+      <div 
+        className="rounded-full border-white bg-black mx-auto flex items-center justify-center"
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          borderWidth: `${borderWidth}px`,
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center space-y-4 p-8">
+    <div className="flex flex-col items-center">
       <div 
         className="relative rounded-full border-white bg-black mx-auto flex items-center justify-center shadow-lg shadow-blue-500/20"
         style={{
@@ -83,8 +97,8 @@ function AnalogClock({
               style={{
                 top: '50%',
                 left: '50%',
-                width: `${specialMarkerPositions.includes(i) ? 3 * scale : 1.5 * scale}px`,
-                height: `${specialMarkerPositions.includes(i) ? markerHeight * 1.5 : markerHeight}px`,
+                width: `${Math.max(1, specialMarkerPositions.includes(i) ? 3 * scale : 1.5 * scale)}px`,
+                height: `${Math.max(8, specialMarkerPositions.includes(i) ? markerHeight * 1.5 : markerHeight)}px`,
                 backgroundColor: 'white',
                 transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-${markerDistance}px)`,
                 transformOrigin: '50% 50%',
@@ -92,59 +106,57 @@ function AnalogClock({
             />
           ))}
 
-          {/* Clock hands - only render when mounted to avoid hydration mismatch */}
-          {mounted && (
-            <>
-              {/* Hour hand */}
-              <div 
-                className="absolute bg-white transition-transform duration-1000 ease-in-out"
-                style={{ 
-                  width: `${scaledHourHandThickness}px`,
-                  height: `${hourHandHeight}px`,
-                  top: '50%',
-                  left: '50%',
-                  transform: `translate(-50%, -100%) rotate(${hourDegrees}deg)`,
-                  transformOrigin: '50% 100%',
-                  borderRadius: `${scaledHourHandThickness / 2}px`,
-                }}
-              />
-              
-              {/* Minute hand */}
-              <div 
-                className="absolute bg-white transition-transform duration-1000 ease-in-out"
-                style={{ 
-                  width: `${scaledMinuteHandThickness}px`,
-                  height: `${minuteHandHeight}px`,
-                  top: '50%',
-                  left: '50%',
-                  transform: `translate(-50%, -100%) rotate(${minuteDegrees}deg)`,
-                  transformOrigin: '50% 100%',
-                  borderRadius: `${scaledMinuteHandThickness / 2}px`,
-                }}
-              />
-              
-              {/* Second hand */}
-              <div 
-                className="absolute bg-red-500"
-                style={{ 
-                  width: `${scaledSecondHandThickness}px`,
-                  height: `${secondHandHeight}px`,
-                  top: '50%',
-                  left: '50%',
-                  transform: `translate(-50%, -100%) rotate(${secondDegrees}deg)`,
-                  transformOrigin: '50% 100%',
-                  borderRadius: `${scaledSecondHandThickness / 2}px`,
-                }}
-              />
-            </>
-          )}
+          {/* Clock hands */}
+          <>
+            {/* Hour hand */}
+            <div 
+              className="absolute bg-white transition-transform duration-1000 ease-in-out"
+              style={{ 
+                width: `${scaledHourHandThickness}px`,
+                height: `${hourHandHeight}px`,
+                top: '50%',
+                left: '50%',
+                transform: `translate(-50%, -100%) rotate(${hourDegrees}deg)`,
+                transformOrigin: '50% 100%',
+                borderRadius: `${scaledHourHandThickness / 2}px`,
+              }}
+            />
+            
+            {/* Minute hand */}
+            <div 
+              className="absolute bg-white transition-transform duration-1000 ease-in-out"
+              style={{ 
+                width: `${scaledMinuteHandThickness}px`,
+                height: `${minuteHandHeight}px`,
+                top: '50%',
+                left: '50%',
+                transform: `translate(-50%, -100%) rotate(${minuteDegrees}deg)`,
+                transformOrigin: '50% 100%',
+                borderRadius: `${scaledMinuteHandThickness / 2}px`,
+              }}
+            />
+            
+            {/* Second hand */}
+            <div 
+              className="absolute bg-red-500"
+              style={{ 
+                width: `${scaledSecondHandThickness}px`,
+                height: `${secondHandHeight}px`,
+                top: '50%',
+                left: '50%',
+                transform: `translate(-50%, -100%) rotate(${secondDegrees}deg)`,
+                transformOrigin: '50% 100%',
+                borderRadius: `${scaledSecondHandThickness / 2}px`,
+              }}
+            />
+          </>
 
           {/* Center dot */}
           <div 
             className="absolute bg-white rounded-full z-10 flex items-center justify-center" 
             style={{
-              width: `${centerDotSize}px`,
-              height: `${centerDotSize}px`,
+              width: `${Math.max(8, centerDotSize)}px`,
+              height: `${Math.max(8, centerDotSize)}px`,
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
@@ -153,8 +165,8 @@ function AnalogClock({
             <div 
               className="bg-blue-500 rounded-full"
               style={{
-                width: `${centerDotSize * 0.6}px`,
-                height: `${centerDotSize * 0.6}px`,
+                width: `${Math.max(4, centerDotSize * 0.6)}px`,
+                height: `${Math.max(4, centerDotSize * 0.6)}px`,
               }}
             />
           </div>
