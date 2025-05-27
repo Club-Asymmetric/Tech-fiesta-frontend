@@ -80,7 +80,7 @@ const LoadingScreen = ({
           const nextProgress = prev + increment;
           return nextProgress > 50 ? 50 : nextProgress; // Cap at 50% for initial progress
         });
-      }, 100); // Slightly slower updates for smoother animation
+      }, 10); // Slightly slower updates for smoother animation
       
       return () => clearInterval(interval);
     }
@@ -93,25 +93,24 @@ const LoadingScreen = ({
       
       // Start fade out transition
       setIsTransitioning(true);
-      
-      setTimeout(() => {
+        setTimeout(() => {
         // Restore scroll and hide loading screen
         document.body.style.overflow = '';
         setIsVisible(false);
         
         // Call completion callback immediately
         onLoadingComplete?.();
-      }, 300); // Reduced transition duration for smoother experience
+      }, 200); // Faster transition for better UX
     }
   }, [allTasksCompleted, hasMinimumTimeElapsed, onLoadingComplete]);
   if (!isVisible) return null;
 
   return (    <div 
-      className={`fixed inset-0 z-50 bg-black flex items-center justify-center transition-all duration-300 ease-in-out ${
+      className={`fixed inset-0 z-50 bg-black flex items-center justify-center transition-all duration-200 ease-in-out ${
         isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
       }`}
     >{/* Background pattern of small clocks */}
-      {isMounted && (        <div className={`absolute inset-0 opacity-10 transition-opacity duration-300 ${
+      {isMounted && (        <div className={`absolute inset-0 opacity-10 transition-opacity duration-200 ${
           isTransitioning ? 'opacity-0' : 'opacity-10'
         }`}>
           {backgroundClocks.map((clock, i) => (
@@ -137,7 +136,7 @@ const LoadingScreen = ({
             </div>
           ))}
         </div>
-      )}      {/* Main loading clock */}      <div className={`relative z-10 flex flex-col items-center transition-all duration-300 ${
+      )}      {/* Main loading clock */}      <div className={`relative z-10 flex flex-col items-center transition-all duration-200 ${
         isTransitioning ? 'opacity-0 transform translate-y-4 scale-95' : 'opacity-100 transform translate-y-0 scale-100'
       }`}>
         <div className="relative">

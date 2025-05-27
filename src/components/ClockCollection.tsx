@@ -11,13 +11,12 @@ interface ClockCollectionProps {
 
 const ClockCollection = ({ 
   mainClockSize = 400, 
-  smallClockCount = 20,
+  smallClockCount = 60,
   onReady
 }: ClockCollectionProps) => {
-  // Initialize with null to avoid hydration mismatch
   const [viewportSize, setViewportSize] = useState<{ width: number, height: number } | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  // Set viewport size only once on mount
+  
   useEffect(() => {
     if (!isInitialized && typeof window !== 'undefined') {
       setViewportSize({
@@ -28,19 +27,16 @@ const ClockCollection = ({
     }
   }, [isInitialized]);
 
-  // Call onReady when component is fully initialized
   useEffect(() => {
     if (isInitialized && viewportSize && onReady) {
-      // Small delay to ensure all initialization is complete
       const timer = setTimeout(() => {
         onReady();
-      }, 100);
+      }, 50);
       
       return () => clearTimeout(timer);
     }
   }, [isInitialized, viewportSize, onReady]);
 
-  // Calculate responsive sizes based on viewport
   const getResponsiveSizes = () => {
     if (!viewportSize) return { mainSize: mainClockSize, smallCount: smallClockCount };
     
@@ -49,83 +45,68 @@ const ClockCollection = ({
     const isTablet = width >= 768 && width < 1024;
     
     let responsiveMainSize = mainClockSize;
-    let responsiveSmallCount = smallClockCount;
-    
-    if (isMobile) {
-      // Mobile: smaller main clock, fewer small clocks
-      responsiveMainSize = Math.min(mainClockSize * 0.6, width * 0.7, height * 0.4);
-      responsiveSmallCount = Math.max(6, Math.floor(smallClockCount * 0.3));
+    let responsiveSmallCount = smallClockCount;    if (isMobile) {
+      responsiveMainSize = Math.min(mainClockSize * 0.6, width * 0.6, height * 0.4);
+      responsiveSmallCount = Math.min(Math.max(70, Math.floor(smallClockCount * 1.3)), 90);
     } else if (isTablet) {
-      // Tablet: medium adjustments
       responsiveMainSize = Math.min(mainClockSize * 0.8, width * 0.5, height * 0.5);
-      responsiveSmallCount = Math.max(10, Math.floor(smallClockCount * 0.6));
+      responsiveSmallCount = Math.min(Math.max(80, Math.floor(smallClockCount * 1.5)), 110);
     } else {
-      // Desktop: use original size but cap at viewport
       responsiveMainSize = Math.min(mainClockSize, width * 0.4, height * 0.6);
+      responsiveSmallCount = Math.min(Math.max(90, Math.floor(smallClockCount * 1.8)), 130);
     }
     
-    return { 
-      mainSize: Math.max(200, responsiveMainSize), // Minimum size
+    return {
+      mainSize: Math.max(200, responsiveMainSize),
       smallCount: responsiveSmallCount 
     };
   };
 
-  // Generate clock positions and sizes with varied distribution
   const generateClocks = () => {
-    const clocks = [];
-    const { mainSize, smallCount } = getResponsiveSizes();
-    const safeZone = mainSize * 0.6; // Adjusted safe zone
+    const clocks: Array<{
+      x: number;
+      y: number;
+      size: number;
+      hourHandThickness: number;
+      minuteHandThickness: number;
+      secondHandThickness: number;
+      zone: string;
+      variant: number; // Add variant property
+    }> = [];
     
-    // Use default values if viewportSize is null (during SSR)
+    const { mainSize, smallCount } = getResponsiveSizes();
+    
     const width = viewportSize?.width || 1200;
     const height = viewportSize?.height || 800;
     
     const isMobile = width < 768;
-    const isTablet = width >= 768 && width < 1024;
-    
-    // Calculate available space more accurately
-    const margin = isMobile ? 20 : isTablet ? 40 : 60;
-    const maxX = (width - margin * 2) / 2;
-    const maxY = (height - margin * 2) / 2;
-    
-    // Responsive size ranges
-    let sizes;
+    const isTablet = width >= 768 && width < 1024;    let sizes;
     if (isMobile) {
       sizes = [
-        { min: 40, max: 60, weight: 0.5 },   // Smaller clocks for mobile
-        { min: 60, max: 80, weight: 0.3 },   
-        { min: 80, max: 100, weight: 0.2 }   
+        { min: 25, max: 55, weight: 0.55 },
+        { min: 55, max: 80, weight: 0.25 },
+        { min: 80, max: 110, weight: 0.15 },
+        { min: 110, max: 140, weight: 0.05 }
       ];
     } else if (isTablet) {
       sizes = [
-        { min: 50, max: 80, weight: 0.4 },   
-        { min: 80, max: 110, weight: 0.4 },  
-        { min: 110, max: 140, weight: 0.2 }  
+        { min: 35, max: 70, weight: 0.5 },
+        { min: 70, max: 105, weight: 0.3 },
+        { min: 105, max: 140, weight: 0.15 },
+        { min: 140, max: 180, weight: 0.05 }
       ];
     } else {
       sizes = [
-        { min: 60, max: 90, weight: 0.3 },   // Small clocks
-        { min: 90, max: 130, weight: 0.4 },  // Medium clocks
-        { min: 130, max: 180, weight: 0.2 }, // Large clocks
-        { min: 180, max: 220, weight: 0.1 }  // Extra large clocks
+        { min: 40, max: 85, weight: 0.45 },
+        { min: 85, max: 130, weight: 0.3 },
+        { min: 130, max: 175, weight: 0.2 },
+        { min: 175, max: 220, weight: 0.05 }
       ];
     }
     
-    // Define zones for better distribution - adjusted for mobile
-    const zoneMultiplier = isMobile ? 0.4 : isTablet ? 0.5 : 0.6;
-    const zones = [
-      { name: 'top-left', centerX: -maxX * zoneMultiplier, centerY: -maxY * zoneMultiplier, radius: maxX * 0.3 },
-      { name: 'top-right', centerX: maxX * zoneMultiplier, centerY: -maxY * zoneMultiplier, radius: maxX * 0.3 },
-      { name: 'bottom-left', centerX: -maxX * zoneMultiplier, centerY: maxY * zoneMultiplier, radius: maxX * 0.3 },
-      { name: 'bottom-right', centerX: maxX * zoneMultiplier, centerY: maxY * zoneMultiplier, radius: maxX * 0.3 },
-      { name: 'top', centerX: 0, centerY: -maxY * 0.6, radius: maxX * 0.25 },
-      { name: 'bottom', centerX: 0, centerY: maxY * 0.6, radius: maxX * 0.25 },
-      { name: 'left', centerX: -maxX * 0.6, centerY: 0, radius: maxY * 0.25 },
-      { name: 'right', centerX: maxX * 0.6, centerY: 0, radius: maxY * 0.25 },
-      { name: 'anywhere', centerX: 0, centerY: 0, radius: Math.max(maxX, maxY) * 0.8 }
-    ];
+    const mainClockRadius = mainSize / 2;
+    const avoidZoneRadius = mainClockRadius + 40;
     
-    // Function to get random size based on weighted distribution
     const getRandomSize = () => {
       const rand = Math.random();
       let cumulativeWeight = 0;
@@ -136,165 +117,128 @@ const ClockCollection = ({
           return Math.floor(sizeRange.min + Math.random() * (sizeRange.max - sizeRange.min));
         }
       }
-      return sizes[0].min; // fallback
+      return sizes[0].min;
+    };
+      // Function to get random variant (0-7 for 8 different clock designs)
+    const getRandomVariant = () => {
+      return Math.floor(Math.random() * 8);
     };
     
-    // Function to check if two circles overlap (with padding)
-    const isOverlapping = (x1: number, y1: number, r1: number, x2: number, y2: number, r2: number, padding: number = isMobile ? 10 : 15) => {
-      const distance = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-      return distance < (r1 + r2 + padding);
+    const isTooCloseToMainClock = (x: number, y: number, radius: number) => {
+      const distanceFromCenter = Math.sqrt(x * x + y * y);
+      return distanceFromCenter < (avoidZoneRadius + radius);
     };
+      const gridSize = isMobile ? 40 : isTablet ? 50 : 60; // Smaller grid for more clocks
+    const extendedWidth = width * 1.4; // Increase coverage area
+    const extendedHeight = height * 1.4;
     
-    // Generate positions for small clocks with varied distribution
-    let clocksPerZone = Math.ceil(smallCount / zones.length);
+    const cols = Math.ceil(extendedWidth / gridSize);
+    const rows = Math.ceil(extendedHeight / gridSize);
     
-    for (let zoneIndex = 0; zoneIndex < zones.length && clocks.length < smallCount; zoneIndex++) {
-      const zone = zones[zoneIndex];
-      let clocksInThisZone = 0;
-      const maxClocksInZone = Math.min(clocksPerZone, smallCount - clocks.length);
-      
-      for (let attempt = 0; attempt < 50 && clocksInThisZone < maxClocksInZone; attempt++) {
-        const size = getRandomSize();
-        const radius = size / 2;
+    const allPositions = [];
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = (col * gridSize) - (extendedWidth / 2) + (gridSize / 2);
+        const y = (row * gridSize) - (extendedHeight / 2) + (gridSize / 2);
         
-        let x, y, distanceFromCenter;
-        let validPosition = false;
-        let positionAttempts = 0;
+        const randomX = x + (Math.random() - 0.5) * gridSize * 0.7;
+        const randomY = y + (Math.random() - 0.5) * gridSize * 0.7;
         
-        while (!validPosition && positionAttempts < 30) {
-          if (zone.name === 'anywhere') {
-            // Random position anywhere
-            const spreadMultiplier = isMobile ? 1.2 : 1.8;
-            x = (Math.random() - 0.5) * maxX * spreadMultiplier;
-            y = (Math.random() - 0.5) * maxY * spreadMultiplier;
-          } else {
-            // Position within zone with some randomness
-            const angle = Math.random() * Math.PI * 2;
-            const distanceFromZoneCenter = Math.random() * zone.radius;
-            x = zone.centerX + Math.cos(angle) * distanceFromZoneCenter;
-            y = zone.centerY + Math.sin(angle) * distanceFromZoneCenter;
-            
-            // Add some extra randomness - less on mobile
-            const randomness = isMobile ? 50 : 100;
-            x += (Math.random() - 0.5) * randomness;
-            y += (Math.random() - 0.5) * randomness;
-          }
-          
-          distanceFromCenter = Math.sqrt(x * x + y * y);
-          
-          // Check if position is valid (not too close to center)
-          if (distanceFromCenter < safeZone + radius) {
-            positionAttempts++;
-            continue;
-          }
-          
-          // Check collision with existing clocks
-          let hasCollision = false;
-          for (const existingClock of clocks) {
-            if (isOverlapping(x, y, radius, existingClock.x ?? 0 , existingClock.y ?? 0 , existingClock.size / 2)) {
-              hasCollision = true;
-              break;
-            }
-          }
-          
-          // Check if clock would be too close to screen edges - more restrictive on mobile
-          const edgeBuffer = isMobile ? 0.85 : 0.95;
-          if (Math.abs(x) + radius > maxX * edgeBuffer || Math.abs(y) + radius > maxY * edgeBuffer) {
-            hasCollision = true;
-          }
-          
-          if (!hasCollision) {
-            validPosition = true;
-          } else {
-            positionAttempts++;
-          }
-        }
-        
-        // If we found a valid position, add the clock
-        if (validPosition) {
-          // Scale hand thickness proportionally
-          const hourHandThickness = Math.max(1, size / 80);  
-          const minuteHandThickness = Math.max(0.8, size / 120);
-          const secondHandThickness = Math.max(0.5, size / 160);
-          
-          clocks.push({
-            x, 
-            y, 
-            size, 
-            hourHandThickness, 
-            minuteHandThickness, 
-            secondHandThickness,
-            zone: zone.name
-          });
-          
-          clocksInThisZone++;
-        }
+        allPositions.push({ x: randomX, y: randomY, row, col });
       }
     }
     
-    // Fill remaining slots with random positions if needed
-    while (clocks.length < smallCount) {
+    // Shuffle positions for random placement
+    for (let i = allPositions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allPositions[i], allPositions[j]] = [allPositions[j], allPositions[i]];
+    }    let placed = 0;
+    const targetCount = Math.min(smallCount, 130); // Increase cap to 130 clocks maximum
+    
+    for (const pos of allPositions) {
+      if (placed >= targetCount) break;
+      
       const size = getRandomSize();
       const radius = size / 2;
       
-      let x, y, distanceFromCenter;
-      let validPosition = false;
-      let attempts = 0;
+      if (isTooCloseToMainClock(pos.x, pos.y, radius)) {
+        continue;
+      }
       
-      while (!validPosition && attempts < 50) {
-        const spreadMultiplier = isMobile ? 1.2 : 1.6;
-        x = (Math.random() - 0.5) * maxX * spreadMultiplier;
-        y = (Math.random() - 0.5) * maxY * spreadMultiplier;
-        distanceFromCenter = Math.sqrt(x * x + y * y);
-        
-        if (distanceFromCenter < safeZone + radius) {
-          attempts++;
-          continue;
-        }
-        
-        let hasCollision = false;
-        for (const existingClock of clocks) {
-          if (isOverlapping(x, y, radius, existingClock.x ?? 0 , existingClock.y ?? 0 , existingClock.size / 2)) {
-            hasCollision = true;
-            break;
-          }
-        }
-        
-        const edgeBuffer = isMobile ? 0.85 : 0.95;
-        if (Math.abs(x) + radius > maxX * edgeBuffer || Math.abs(y) + radius > maxY * edgeBuffer) {
-          hasCollision = true;
-        }
-        
-        if (!hasCollision) {
-          validPosition = true;
-        } else {
-          attempts++;
+      let completeOverlap = false;
+      for (const existingClock of clocks) {
+        const distance = Math.sqrt((pos.x - existingClock.x) ** 2 + (pos.y - existingClock.y) ** 2);
+        const minDistance = Math.max(2, Math.min(radius, existingClock.size / 2) * 0.02); // Allow more overlap for coverage
+        if (distance < minDistance) {
+          completeOverlap = true;
+          break;
         }
       }
       
-      if (!validPosition) break; // Can't place more clocks
+      if (!completeOverlap) {
+        const hourHandThickness = Math.max(0.8, size / 80);  
+        const minuteHandThickness = Math.max(0.6, size / 120);
+        const secondHandThickness = Math.max(0.4, size / 160);
+        
+        clocks.push({
+          x: pos.x, 
+          y: pos.y, 
+          size, 
+          hourHandThickness, 
+          minuteHandThickness, 
+          secondHandThickness,
+          zone: `grid-${pos.row}-${pos.col}`,
+          variant: getRandomVariant() // Assign random variant
+        });
+        placed++;
+      }
+    }    // Add additional random clocks
+    let extraAttempts = 0;
+    const extraTarget = Math.min(placed + 25, targetCount, 130); // Increase extra clocks and ensure we don't exceed 130 total
+    
+    while (clocks.length < extraTarget && extraAttempts < 100) {
+      extraAttempts++;
       
-      const hourHandThickness = Math.max(1, size / 80);  
-      const minuteHandThickness = Math.max(0.8, size / 120);
-      const secondHandThickness = Math.max(0.5, size / 160);
+      const x = (Math.random() - 0.5) * extendedWidth;
+      const y = (Math.random() - 0.5) * extendedHeight;
+      const size = getRandomSize();
+      const radius = size / 2;
       
-      clocks.push({
-        x, 
-        y, 
-        size, 
-        hourHandThickness, 
-        minuteHandThickness, 
-        secondHandThickness,
-        zone: 'random'
-      });
+      if (isTooCloseToMainClock(x, y, radius)) {
+        continue;
+      }
+      
+      let tooClose = false;
+      for (const existingClock of clocks) {
+        const distance = Math.sqrt((x - existingClock.x) ** 2 + (y - existingClock.y) ** 2);
+        if (distance < 1.5) { // Allow even closer placement for better coverage
+          tooClose = true;
+          break;
+        }
+      }
+      
+      if (!tooClose) {
+        const hourHandThickness = Math.max(0.8, size / 80);  
+        const minuteHandThickness = Math.max(0.6, size / 120);
+        const secondHandThickness = Math.max(0.4, size / 160);
+        
+        clocks.push({
+          x, 
+          y, 
+          size, 
+          hourHandThickness, 
+          minuteHandThickness, 
+          secondHandThickness,
+          zone: 'random-fill',
+          variant: getRandomVariant() // Assign random variant
+        });
+      }
     }
     
     return clocks;
   };
 
-  // Generate clocks only once on initial load - never re-render until page refresh
   const { smallClocks, mainSize } = React.useMemo(() => {
-    // Only generate clocks if we're in the browser and have initial viewport size
     if (isInitialized && viewportSize) {
       const { mainSize } = getResponsiveSizes();
       return {
@@ -303,13 +247,12 @@ const ClockCollection = ({
       };
     }
     return { smallClocks: [], mainSize: mainClockSize };
-  }, [isInitialized, viewportSize !== null]); // Only depends on initialization state
+  }, [isInitialized, viewportSize !== null]);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black">
-      {/* Main clock in center */}
+    <div className="relative min-h-screen w-full overflow-hidden bg-black">      {/* Main clock in center - using vintage variant for a classic look */}
       <div 
-        className="absolute z-10"
+        className="absolute z-20"
         style={{
           top: '50%',
           left: '50%',
@@ -321,14 +264,15 @@ const ClockCollection = ({
           hourHandThickness={mainSize / 100}
           minuteHandThickness={mainSize / 150}
           secondHandThickness={mainSize / 200}
+          variant={0} // Main clock uses vintage pocket watch style
         />
       </div>
       
-      {/* Smaller clocks - only render on client side after hydration */}
+      {/* Smaller clocks with variations */}
       {viewportSize && smallClocks.map((clock, i) => (
         <div 
           key={`clock-${i}-${clock.x}-${clock.y}`}
-          className="absolute"
+          className="absolute z-10"
           style={{
             top: '50%',
             left: '50%',
@@ -340,6 +284,7 @@ const ClockCollection = ({
             hourHandThickness={clock.hourHandThickness}
             minuteHandThickness={clock.minuteHandThickness}
             secondHandThickness={clock.secondHandThickness}
+            variant={clock.variant} // Use the assigned variant
           />
         </div>
       ))}
