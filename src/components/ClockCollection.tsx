@@ -47,13 +47,13 @@ const ClockCollection = ({
     let responsiveMainSize = mainClockSize;
     let responsiveSmallCount = smallClockCount;    if (isMobile) {
       responsiveMainSize = Math.min(mainClockSize * 0.6, width * 0.6, height * 0.4);
-      responsiveSmallCount = Math.min(Math.max(70, Math.floor(smallClockCount * 1.3)), 90);
+      responsiveSmallCount = Math.min(Math.max(80, Math.floor(smallClockCount * 1.5)), 120); // Increased for coverage
     } else if (isTablet) {
       responsiveMainSize = Math.min(mainClockSize * 0.8, width * 0.5, height * 0.5);
-      responsiveSmallCount = Math.min(Math.max(80, Math.floor(smallClockCount * 1.5)), 110);
+      responsiveSmallCount = Math.min(Math.max(100, Math.floor(smallClockCount * 1.8)), 150); // Increased for coverage
     } else {
       responsiveMainSize = Math.min(mainClockSize, width * 0.4, height * 0.6);
-      responsiveSmallCount = Math.min(Math.max(90, Math.floor(smallClockCount * 1.8)), 130);
+      responsiveSmallCount = Math.min(Math.max(120, Math.floor(smallClockCount * 2.2)), 180); // Increased for coverage
     }
     
     return {
@@ -83,24 +83,23 @@ const ClockCollection = ({
     const isTablet = width >= 768 && width < 1024;    let sizes;
     if (isMobile) {
       sizes = [
-        { min: 25, max: 55, weight: 0.55 },
-        { min: 55, max: 80, weight: 0.25 },
-        { min: 80, max: 110, weight: 0.15 },
-        { min: 110, max: 140, weight: 0.05 }
+        { min: 50, max: 80, weight: 0.4 },
+        { min: 80, max: 120, weight: 0.35 },
+        { min: 120, max: 160, weight: 0.2 },
+        { min: 160, max: 200, weight: 0.05 }
       ];
     } else if (isTablet) {
       sizes = [
-        { min: 35, max: 70, weight: 0.5 },
-        { min: 70, max: 105, weight: 0.3 },
-        { min: 105, max: 140, weight: 0.15 },
-        { min: 140, max: 180, weight: 0.05 }
-      ];
-    } else {
+        { min: 60, max: 100, weight: 0.4 },
+        { min: 100, max: 140, weight: 0.35 },
+        { min: 140, max: 180, weight: 0.2 },
+        { min: 180, max: 220, weight: 0.05 }
+      ];    } else {
       sizes = [
-        { min: 40, max: 85, weight: 0.45 },
-        { min: 85, max: 130, weight: 0.3 },
-        { min: 130, max: 175, weight: 0.2 },
-        { min: 175, max: 220, weight: 0.05 }
+        { min: 70, max: 120, weight: 0.4 },
+        { min: 120, max: 170, weight: 0.35 },
+        { min: 170, max: 220, weight: 0.2 },
+        { min: 220, max: 280, weight: 0.05 }
       ];
     }
     
@@ -118,18 +117,16 @@ const ClockCollection = ({
         }
       }
       return sizes[0].min;
-    };
-      // Function to get random variant (0-7 for 8 different clock designs)
+    };      // Function to get random variant (1-7 for smaller clocks, excluding variant 0 which is reserved for main clock)
     const getRandomVariant = () => {
-      return Math.floor(Math.random() * 8);
+      return Math.floor(Math.random() * 7) + 1; // Returns 1-7, excluding 0
     };
     
     const isTooCloseToMainClock = (x: number, y: number, radius: number) => {
       const distanceFromCenter = Math.sqrt(x * x + y * y);
       return distanceFromCenter < (avoidZoneRadius + radius);
-    };
-      const gridSize = isMobile ? 40 : isTablet ? 50 : 60; // Smaller grid for more clocks
-    const extendedWidth = width * 1.4; // Increase coverage area
+    };    const gridSize = isMobile ? 60 : isTablet ? 70 : 80; // Smaller grid for denser coverage
+    const extendedWidth = width * 1.4; // Extended coverage area for better screen filling
     const extendedHeight = height * 1.4;
     
     const cols = Math.ceil(extendedWidth / gridSize);
@@ -153,7 +150,7 @@ const ClockCollection = ({
       const j = Math.floor(Math.random() * (i + 1));
       [allPositions[i], allPositions[j]] = [allPositions[j], allPositions[i]];
     }    let placed = 0;
-    const targetCount = Math.min(smallCount, 130); // Increase cap to 130 clocks maximum
+    const targetCount = Math.min(smallCount, 250); // Increased maximum for much better coverage
     
     for (const pos of allPositions) {
       if (placed >= targetCount) break;
@@ -163,12 +160,10 @@ const ClockCollection = ({
       
       if (isTooCloseToMainClock(pos.x, pos.y, radius)) {
         continue;
-      }
-      
-      let completeOverlap = false;
+      }        let completeOverlap = false;
       for (const existingClock of clocks) {
         const distance = Math.sqrt((pos.x - existingClock.x) ** 2 + (pos.y - existingClock.y) ** 2);
-        const minDistance = Math.max(2, Math.min(radius, existingClock.size / 2) * 0.02); // Allow more overlap for coverage
+        const minDistance = Math.max(15, (radius + existingClock.size / 2) * 0.9); // Reduced spacing for denser coverage
         if (distance < minDistance) {
           completeOverlap = true;
           break;
@@ -194,7 +189,7 @@ const ClockCollection = ({
       }
     }    // Add additional random clocks
     let extraAttempts = 0;
-    const extraTarget = Math.min(placed + 25, targetCount, 130); // Increase extra clocks and ensure we don't exceed 130 total
+    const extraTarget = Math.min(placed + 50, targetCount, 250); // Increased extra clocks and max to 250
     
     while (clocks.length < extraTarget && extraAttempts < 100) {
       extraAttempts++;
@@ -206,12 +201,10 @@ const ClockCollection = ({
       
       if (isTooCloseToMainClock(x, y, radius)) {
         continue;
-      }
-      
-      let tooClose = false;
+      }        let tooClose = false;
       for (const existingClock of clocks) {
         const distance = Math.sqrt((x - existingClock.x) ** 2 + (y - existingClock.y) ** 2);
-        if (distance < 1.5) { // Allow even closer placement for better coverage
+        if (distance < (radius + existingClock.size / 2) * 1.0) { // Tighter spacing for better coverage
           tooClose = true;
           break;
         }
@@ -250,7 +243,7 @@ const ClockCollection = ({
   }, [isInitialized, viewportSize !== null]);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black">      {/* Main clock in center - using vintage variant for a classic look */}
+    <div className="relative min-h-screen w-full overflow-hidden bg-black">      {/* Main clock in center - exclusively uses variant 0 (enhanced 3D beveled border) */}
       <div 
         className="absolute z-20"
         style={{
@@ -264,11 +257,11 @@ const ClockCollection = ({
           hourHandThickness={mainSize / 100}
           minuteHandThickness={mainSize / 150}
           secondHandThickness={mainSize / 200}
-          variant={0} // Main clock uses vintage pocket watch style
+          variant={0} // Main clock exclusively uses the enhanced 3D beveled border style
         />
       </div>
       
-      {/* Smaller clocks with variations */}
+      {/* Smaller clocks with variations (variants 1-7 only) */}
       {viewportSize && smallClocks.map((clock, i) => (
         <div 
           key={`clock-${i}-${clock.x}-${clock.y}`}

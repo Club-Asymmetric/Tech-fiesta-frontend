@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface AnalogClockProps {
   size?: number;
   hourHandThickness?: number;
   minuteHandThickness?: number;
   secondHandThickness?: number;
-  variant?: number; // Add variant prop to determine clock style
+  variant?: number;
 }
 
 function AnalogClock({ 
@@ -19,7 +19,9 @@ function AnalogClock({
 }: AnalogClockProps) {
   const [time, setTime] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
-
+  const [isHovered, setIsHovered] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const clockRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     setMounted(true);
     setTime(new Date());
@@ -31,26 +33,49 @@ function AnalogClock({
     return () => {
       clearInterval(timer);
     };
-  }, []);  // Define diverse dark-themed clock design variations with distinctive aesthetics
+  }, []);
+
+  // Mouse interaction handlers for variant 0
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (variant === 0 && clockRef.current) {
+      const rect = clockRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const x = (e.clientX - centerX) / (rect.width / 2);
+      const y = (e.clientY - centerY) / (rect.height / 2);
+      setMousePosition({ x: x * 10, y: y * 10 }); // Amplify for subtle effect
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (variant === 0) setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (variant === 0) {
+      setIsHovered(false);
+      setMousePosition({ x: 0, y: 0 });
+    }
+  };
+
   const clockVariants = [
-    // Variant 0: Dark Vintage Pocket Watch
+    // Variant 0: Dark Vintage Pocket Watch with Realistic Beveled Border
     {
-      faceColor: 'bg-gradient-to-br from-amber-900 to-amber-950',
-      borderColor: 'border-amber-600',
-      borderWidth: 6,
+      faceColor: 'bg-gradient-to-br from-neutral-800 to-neutral-900',
+      borderColor: 'border-neutral-700',
+      borderWidth: 12,
       numberStyle: 'roman',
       hourHandColor: 'bg-amber-400',
       minuteHandColor: 'bg-amber-300',
       secondHandColor: 'bg-red-500',
       centerDotColor: 'bg-amber-500',
       markerColor: 'rgb(251, 191, 36)',
-      shadowColor: 'shadow-amber-600/60',
+      shadowColor: 'shadow-neutral-800/50',
       textColor: 'text-amber-200',
       design: 'vintage',
-      hasInnerRing: true,
-      handStyle: 'ornate'
+      handStyle: 'ornate',
     },
-    // Variant 1: Industrial Steampunk
+    // Other variants remain the same...
     {
       faceColor: 'bg-gradient-to-br from-stone-800 to-stone-950',
       borderColor: 'border-orange-600',
@@ -67,7 +92,6 @@ function AnalogClock({
       hasGears: true,
       handStyle: 'industrial'
     },
-    // Variant 2: Ultra Modern Minimalist
     {
       faceColor: 'bg-black',
       borderColor: 'border-white',
@@ -84,7 +108,6 @@ function AnalogClock({
       hasNeonGlow: true,
       handStyle: 'sleek'
     },
-    // Variant 3: Dark Art Deco Luxury
     {
       faceColor: 'bg-gradient-to-br from-slate-900 to-black',
       borderColor: 'border-yellow-500',
@@ -101,7 +124,6 @@ function AnalogClock({
       hasGeometricPattern: true,
       handStyle: 'geometric'
     },
-    // Variant 4: Digital-Analog Hybrid
     {
       faceColor: 'bg-gradient-to-br from-slate-900 to-slate-950',
       borderColor: 'border-blue-500',
@@ -118,7 +140,6 @@ function AnalogClock({
       hasDigitalElements: true,
       handStyle: 'tech'
     },
-    // Variant 5: Dark Cosmic/Space Theme
     {
       faceColor: 'bg-gradient-to-br from-purple-900 to-black',
       borderColor: 'border-purple-400',
@@ -135,7 +156,6 @@ function AnalogClock({
       hasStars: true,
       handStyle: 'cosmic'
     },
-    // Variant 6: Dark Retro 70s
     {
       faceColor: 'bg-gradient-to-br from-orange-900 to-red-950',
       borderColor: 'border-yellow-600',
@@ -152,7 +172,6 @@ function AnalogClock({
       hasRetroPattern: true,
       handStyle: 'retro'
     },
-    // Variant 7: Dark Military/Tactical
     {
       faceColor: 'bg-gradient-to-br from-green-900 to-green-950',
       borderColor: 'border-green-600',
@@ -173,27 +192,29 @@ function AnalogClock({
 
   const currentVariant = clockVariants[variant % clockVariants.length];
   const scale = size / 256;
-  
-  // Calculate dimensions
-  const hourHandHeight = 60 * scale;
+    const hourHandHeight = 60 * scale;
   const minuteHandHeight = 80 * scale;
   const secondHandHeight = 90 * scale;
   const markerHeight = 15 * scale;
-  const markerDistance = (size / 2) - (20 * scale);
+  
+  // Adjust marker distance based on variant - variant 0 has extra border layers
+  const baseMarkerDistance = (size / 2) - (20 * scale);
+  const markerDistance = variant === 0 ? baseMarkerDistance - (12 * scale) : baseMarkerDistance;
+  
   const centerDotSize = 12 * scale;
   const borderWidth = Math.max(1, currentVariant.borderWidth * scale);
   
   const scaledHourHandThickness = Math.max(1, hourHandThickness * scale);
   const scaledMinuteHandThickness = Math.max(0.8, minuteHandThickness * scale);
   const scaledSecondHandThickness = Math.max(0.5, secondHandThickness * scale);
-  // Roman numerals
+
   const romanNumerals = ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
   const arabicNumbers = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
   const modernNumbers = ['12', '', '', '3', '', '', '6', '', '', '9', '', ''];
   const digitalNumbers = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
   const constellationSymbols = ['✦', '★', '✧', '✩', '✪', '✫', '✬', '✭', '✮', '✯', '✰', '✱'];
   const retroNumbers = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
-  const militaryNumbers = ['1200', '0100', '0200', '0300', '0400', '0500', '0600', '0700', '0800', '0900', '1000', '1100'];
+  const militaryNumbers = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
 
   let secondDegrees = 0;
   let minuteDegrees = 0;
@@ -204,6 +225,7 @@ function AnalogClock({
     minuteDegrees = time.getMinutes() * 6 + time.getSeconds() * 0.1;
     hourDegrees = (time.getHours() % 12) * 30 + time.getMinutes() * 0.5;
   }
+
   if (!mounted) {
     return (
       <div 
@@ -217,33 +239,11 @@ function AnalogClock({
     );
   }
 
-  // Function to render special design elements
   const renderDesignElements = () => {
     const elements = [];
     
     switch (currentVariant.design) {
-      case 'vintage':
-        // Inner ring for vintage look
-        if (currentVariant.hasInnerRing) {
-          elements.push(
-            <div
-              key="inner-ring"
-              className="absolute rounded-full border-2"
-              style={{
-                width: `${size * 0.85}px`,
-                height: `${size * 0.85}px`,
-                borderColor: currentVariant.markerColor,
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                opacity: 0.3
-              }}
-            />
-          );
-        }
-        break;
-          case 'steampunk':
-        // Gear elements
+      case 'steampunk':
         if (currentVariant.hasGears) {
           elements.push(
             <div
@@ -277,7 +277,6 @@ function AnalogClock({
         break;
         
       case 'cosmic':
-        // Star elements
         if (currentVariant.hasStars) {
           for (let i = 0; i < 8; i++) {
             const angle = (i * 45) * Math.PI / 180;
@@ -305,7 +304,6 @@ function AnalogClock({
         break;
         
       case 'military':
-        // Crosshairs
         if (currentVariant.hasCrosshairs) {
           elements.push(
             <div
@@ -337,8 +335,8 @@ function AnalogClock({
           );
         }
         break;
-          case 'artdeco':
-        // Geometric pattern
+        
+      case 'artdeco':
         if (currentVariant.hasGeometricPattern) {
           elements.push(
             <div
@@ -359,7 +357,6 @@ function AnalogClock({
         break;
         
       case 'retro':
-        // Retro pattern elements
         if (currentVariant.hasRetroPattern) {
           elements.push(
             <div
@@ -380,7 +377,6 @@ function AnalogClock({
         break;
         
       case 'digital':
-        // Digital grid elements
         if (currentVariant.hasDigitalElements) {
           elements.push(
             <div
@@ -402,11 +398,11 @@ function AnalogClock({
         }
         break;
     }
-      return elements;
+    
+    return elements;
   };
 
   const renderNumbers = () => {
-    
     let numbers;
     switch (currentVariant.numberStyle) {
       case 'roman':
@@ -434,11 +430,10 @@ function AnalogClock({
     return numbers.map((num, i) => {
       if (!num) return null;
       
-      const angle = (i * 30) - 90; // Start from 12 o'clock
+      const angle = (i * 30) - 90;
       const radian = (angle * Math.PI) / 180;
       let numberDistance = markerDistance - (currentVariant.numberStyle === 'roman' ? 25 * scale : 20 * scale);
       
-      // Adjust distance for different number styles
       if (currentVariant.numberStyle === 'military') {
         numberDistance = markerDistance - (35 * scale);
       } else if (currentVariant.numberStyle === 'constellation') {
@@ -452,7 +447,6 @@ function AnalogClock({
       let fontFamily = 'sans-serif';
       let fontWeight = 'font-bold';
       
-      // Style adjustments based on design
       switch (currentVariant.numberStyle) {
         case 'roman':
           fontFamily = 'serif';
@@ -499,137 +493,304 @@ function AnalogClock({
     });
   };
 
-  return (
-    <div className="flex flex-col items-center">
-      <div 
-        className={`relative rounded-full ${currentVariant.borderColor} ${currentVariant.faceColor} mx-auto flex items-center justify-center ${currentVariant.shadowColor} shadow-lg`}
-        style={{
-          width: `${size}px`,
-          height: `${size}px`,
-          borderWidth: `${borderWidth}px`,
-        }}
-      >
-        <div className="absolute inset-0 rounded-full">
-          {/* Hour markers */}
-          {[...Array(12)].map((_, i) => {
-            if (currentVariant.numberStyle === 'dots') {
-              // For minimalist style, use dots instead of lines
-              return (
-                <div 
-                  key={i} 
-                  className="absolute rounded-full"
-                  style={{
-                    width: `${Math.max(3, 6 * scale)}px`,
-                    height: `${Math.max(3, 6 * scale)}px`,
-                    backgroundColor: currentVariant.markerColor,
-                    top: '50%',
-                    left: '50%',
-                    transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-${markerDistance}px)`,
-                    transformOrigin: '50% 50%',
-                  }}
-                />
-              );
-            }
-            
-            // Traditional line markers
-            const isSpecial = [0, 3, 6, 9].includes(i);
-            return (
-              <div 
-                key={i} 
+  // Helper function to attempt to parse Tailwind color class
+  const getColorFromTailwindClass = (twClass: string): string => {
+    const parts = twClass.split('-');
+    if (parts.length < 2) return twClass; 
+    const colorName = parts[1];
+    const shade = parts[2];
+
+    const colorPalette: { [key: string]: { [key: string]: string } } = {
+        neutral: { '700': '#404040', '800': '#262626', '900': '#171717' },
+        amber: { '200': '#fef3c7', '300': '#fde68a', '400': '#fbbf24', '500': '#f59e0b' },
+        orange: { '300': '#fdba74', '400': '#fb923c', '500': '#f97316', '600': '#ea580c', '700': '#c2410c', '900':'#7c2d12' },
+        red: { '500': '#ef4444' },
+        cyan: { '400': '#22d3ee' },
+        yellow: { '300': '#fde047', '400': '#facc15', '500': '#eab308', '600': '#ca8a04', '700': '#a16207' },
+        blue: { '300': '#93c5fd', '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '900': '#1e3a8a' },
+        purple: { '200': '#e9d5ff', '300': '#d8b4fe', '400': '#c084fc', '500': '#a855f7', '600': '#9333ea', '700': '#7e22ce', '900': '#581c87' },
+        green: { '200': '#bbf7d0', '300': '#86efac', '400': '#4ade80', '500': '#22c55e', '600': '#16a34a', '700': '#15803d', '800': '#166534', '900': '#14532d' },
+        white: { default: '#ffffff' },
+    };
+    if (colorPalette[colorName] && colorPalette[colorName][shade]) {
+        return colorPalette[colorName][shade];
+    }
+    if (colorName === 'white' && colorPalette.white.default) return colorPalette.white.default;
+    return twClass.startsWith('border-') || twClass.startsWith('bg-') ? twClass.substring(twClass.indexOf('-') + 1) : twClass; // Fallback
+  };
+
+  // Function to render the clock face content (common to all variants)
+  const renderClockFace = () => (
+    <div 
+      className={`relative rounded-full ${currentVariant.faceColor} flex items-center justify-center`}
+      style={{
+        width: '100%',
+        height: '100%',
+        boxShadow: variant === 0 ? `
+          inset 0 0 12px rgba(0,0,0,0.8),
+          inset 0 4px 8px rgba(0,0,0,0.6),
+          0 2px 4px rgba(0,0,0,0.3)
+        ` : `inset 0 2px 8px rgba(0,0,0,0.4)`
+      }}
+    >
+      <div className="absolute inset-0 rounded-full">
+        {/* Hour markers */}
+        {[...Array(12)].map((_, i) => {
+          const isSpecial = [0, 3, 6, 9].includes(i);
+          return (
+            <div 
+              key={i} 
+              className="absolute"
+              style={{
+                top: '50%',
+                left: '50%',
+                width: `${Math.max(1, isSpecial ? 3 * scale : 1.5 * scale)}px`,
+                height: `${Math.max(8, isSpecial ? markerHeight * 1.5 : markerHeight)}px`,
+                backgroundColor: currentVariant.markerColor,
+                transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-${markerDistance}px)`,
+                transformOrigin: '50% 50%',
+              }}
+            />
+          );
+        })}
+
+        {/* Numbers */}
+        {renderNumbers()}
+
+        {/* Design Elements */}
+        {renderDesignElements()}
+
+        {/* Clock hands */}
+        <div 
+          className={`absolute ${currentVariant.hourHandColor} transition-transform duration-1000 ease-in-out`}
+          style={{ 
+            width: `${scaledHourHandThickness}px`,
+            height: `${hourHandHeight}px`,
+            top: '50%',
+            left: '50%',
+            transform: `translate(-50%, -100%) rotate(${hourDegrees}deg)`,
+            transformOrigin: '50% 100%',
+            borderRadius: currentVariant.handStyle === 'sleek' ? `${scaledHourHandThickness / 2}px` : 
+                         currentVariant.handStyle === 'geometric' ? '0px' : 
+                         `${scaledHourHandThickness / 4}px`,
+            clipPath: currentVariant.handStyle === 'ornate' ? 'polygon(40% 0%, 60% 0%, 70% 20%, 60% 100%, 40% 100%, 30% 20%)' :
+                     currentVariant.handStyle === 'geometric' ? 'polygon(45% 0%, 55% 0%, 60% 30%, 55% 100%, 45% 100%, 40% 30%)' :
+                     currentVariant.handStyle === 'cosmic' ? 'polygon(47% 0%, 53% 0%, 55% 15%, 53% 100%, 47% 100%, 45% 15%)' :
+                     'none',
+            boxShadow: currentVariant.design === 'modern' && currentVariant.hasNeonGlow ? 
+              `0 0 8px ${currentVariant.hourHandColor.replace('bg-', '').replace('white', '#ffffff').replace('blue-400', '#60a5fa')}` : 'none'
+          }}
+        />
+        
+        <div 
+          className={`absolute ${currentVariant.minuteHandColor} transition-transform duration-1000 ease-in-out`}
+          style={{ 
+            width: `${scaledMinuteHandThickness}px`,
+            height: `${minuteHandHeight}px`,
+            top: '50%',
+            left: '50%',
+            transform: `translate(-50%, -100%) rotate(${minuteDegrees}deg)`,
+            transformOrigin: '50% 100%',
+            borderRadius: currentVariant.handStyle === 'sleek' ? `${scaledMinuteHandThickness / 2}px` : 
+                         currentVariant.handStyle === 'geometric' ? '0px' : 
+                         `${scaledMinuteHandThickness / 4}px`,
+            clipPath: currentVariant.handStyle === 'ornate' ? 'polygon(42% 0%, 58% 0%, 65% 25%, 58% 100%, 42% 100%, 35% 25%)' :
+                     currentVariant.handStyle === 'geometric' ? 'polygon(46% 0%, 54% 0%, 58% 35%, 54% 100%, 46% 100%, 42% 35%)' :
+                     currentVariant.handStyle === 'cosmic' ? 'polygon(48% 0%, 52% 0%, 54% 20%, 52% 100%, 48% 100%, 46% 20%)' :
+                     'none',
+            boxShadow: currentVariant.design === 'modern' && currentVariant.hasNeonGlow ? 
+              `0 0 6px ${currentVariant.minuteHandColor.replace('bg-', '').replace('white', '#ffffff').replace('blue-300', '#93c5fd')}` : 'none'
+          }}
+        />
+        
+        <div 
+          className={`absolute ${currentVariant.secondHandColor}`}
+          style={{ 
+            width: `${scaledSecondHandThickness}px`,
+            height: `${secondHandHeight}px`,
+            top: '50%',
+            left: '50%',
+            transform: `translate(-50%, -100%) rotate(${secondDegrees}deg)`,
+            transformOrigin: '50% 100%',
+            borderRadius: currentVariant.handStyle === 'sleek' ? `${scaledSecondHandThickness / 2}px` : 
+                         currentVariant.handStyle === 'geometric' ? '0px' : 
+                         `${scaledSecondHandThickness / 4}px`,
+            clipPath: currentVariant.handStyle === 'tactical' ? 'polygon(48% 0%, 52% 0%, 50% 10%, 52% 100%, 48% 100%, 50% 10%)' :
+                     currentVariant.handStyle === 'cosmic' ? 'polygon(49% 0%, 51% 0%, 50% 5%, 51% 100%, 49% 100%, 50% 5%)' :
+                     'none',
+            boxShadow: currentVariant.design === 'modern' && currentVariant.hasNeonGlow ? 
+              `0 0 4px ${currentVariant.secondHandColor.replace('bg-', '').replace('cyan-400', '#22d3ee')}` : 'none'
+          }}
+        />
+
+        {/* Center dot */}
+        <div 
+          className={`absolute ${currentVariant.centerDotColor} rounded-full z-10`} 
+          style={{
+            width: `${Math.max(8, centerDotSize)}px`,
+            height: `${Math.max(8, centerDotSize)}px`,
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
+      </div>
+    </div>
+  );
+  // Function to render the clock with appropriate border based on variant
+  const renderClockWithBorder = () => {
+    if (variant === 0) {
+      // Variant 0: Enhanced 3D Beveled Border (Realistic Watch)
+      return (
+        <div 
+          className="relative mx-auto" // Outermost bezel container
+          style={{
+            width: `${size + 40}px`,
+            height: `${size + 40}px`,
+            background: `
+              radial-gradient(circle at 25% 25%, #f3f4f6 0%, #d1d5db 15%, #9ca3af 30%, #6b7280 50%, #4b5563 70%, #374151 85%, #1f2937 100%)
+            `,
+            borderRadius: '50%',
+            boxShadow: `
+              0 0 0 1px #0f172a,
+              0 0 0 3px #1e293b,
+              0 0 0 5px #334155,
+              0 0 0 7px #475569,
+              inset 0 6px 12px rgba(0,0,0,0.4),
+              inset 0 -4px 8px rgba(255,255,255,0.15),
+              inset 2px 2px 6px rgba(255,255,255,0.2),
+              inset -2px -2px 6px rgba(0,0,0,0.3),
+              0 12px 24px rgba(0,0,0,0.5),
+              0 6px 12px rgba(0,0,0,0.3)
+            `,
+            padding: '20px',
+            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
+          }}
+        >
+          {/* Middle bezel ring */}
+          <div 
+            className="relative" 
+            style={{
+              width: '100%',
+              height: '100%',
+              background: `
+                conic-gradient(from 0deg, 
+                  #9ca3af 0deg, #b0b5c0 30deg, #8b919e 60deg, 
+                  #6b7280 90deg, #5a6169 120deg, #7a8088 150deg,
+                  #9ca3af 180deg, #b0b5c0 210deg, #8b919e 240deg,
+                  #6b7280 270deg, #5a6169 300deg, #7a8088 330deg, #9ca3af 360deg)
+              `,
+              borderRadius: '50%',
+              boxShadow: `
+                inset 0 3px 6px rgba(255,255,255,0.25),
+                inset 0 -3px 6px rgba(0,0,0,0.4),
+                inset 1px 1px 3px rgba(255,255,255,0.3),
+                inset -1px -1px 3px rgba(0,0,0,0.3),
+                0 0 0 2px #374151,
+                0 2px 4px rgba(0,0,0,0.2)
+              `,
+              padding: '8px'
+            }}
+          >
+            {/* Inner metallic ring with micro-textures */}
+            <div 
+              className="relative" 
+              style={{
+                width: '100%',
+                height: '100%',
+                background: `
+                  radial-gradient(circle at 35% 35%, #e5e7eb 0%, #d1d5db 20%, #9ca3af 40%, #6b7280 60%, #4b5563 80%, #374151 100%),
+                  repeating-conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.1) 1deg, transparent 2deg)
+                `,
+                borderRadius: '50%',
+                boxShadow: `
+                  inset 0 2px 4px rgba(255,255,255,0.3),
+                  inset 0 -2px 4px rgba(0,0,0,0.5),
+                  inset 1px 1px 2px rgba(255,255,255,0.4),
+                  inset -1px -1px 2px rgba(0,0,0,0.4),
+                  0 0 0 1px #1f2937,
+                  0 1px 2px rgba(0,0,0,0.3)
+                `,
+                padding: '6px',
+                position: 'relative'
+              }}
+            >
+              {/* Crown/winding mechanism indicator */}
+              <div
                 className="absolute"
                 style={{
+                  width: `${size * 0.04}px`,
+                  height: `${size * 0.08}px`,
+                  background: 'linear-gradient(90deg, #9ca3af 0%, #6b7280 50%, #4b5563 100%)',
+                  borderRadius: '2px',
                   top: '50%',
-                  left: '50%',
-                  width: `${Math.max(1, isSpecial ? 3 * scale : 1.5 * scale)}px`,
-                  height: `${Math.max(8, isSpecial ? markerHeight * 1.5 : markerHeight)}px`,
-                  backgroundColor: currentVariant.markerColor,
-                  transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-${markerDistance}px)`,
-                  transformOrigin: '50% 50%',
+                  right: '-2px',
+                  transform: 'translateY(-50%)',
+                  boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2), inset 0 -1px 2px rgba(0,0,0,0.3)'
                 }}
-              />
-            );
-          })}          {/* Numbers */}
-          {renderNumbers()}
+              />              {/* Micro hour markers on bezel */}
+              {[...Array(60)].map((_, i) => {
+                const isMainMarker = i % 5 === 0;
+                // Adjust bezel marker distance to position markers on the bezel ring
+                const bezelMarkerDistance = (size + 20) * 0.42; // Position on the middle bezel ring
+                return (
+                  <div
+                    key={`bezel-marker-${i}`}
+                    className="absolute"
+                    style={{
+                      width: isMainMarker ? '3px' : '1.5px',
+                      height: isMainMarker ? `${size * 0.06}px` : `${size * 0.03}px`,
+                      background: isMainMarker ? '#ffffff' : '#d1d5db',
+                      top: '50%',
+                      left: '50%',
+                      transformOrigin: '50% 50%',
+                      transform: `translate(-50%, -50%) rotate(${i * 6}deg) translateY(-${bezelMarkerDistance}px)`,
+                      opacity: isMainMarker ? 0.9 : 0.7,
+                      boxShadow: isMainMarker 
+                        ? '0 0 2px rgba(0,0,0,0.8), inset 0 1px rgba(255,255,255,0.3)' 
+                        : '0 0 1px rgba(0,0,0,0.6)',
+                      borderRadius: '1px',
+                      zIndex: 10
+                    }}
+                  />
+                );
+              })}
+              
+              {renderClockFace()}
+            </div>
+          </div>        </div>
+      );
+    } else {
+      // Other variants: Simpler border with glow
+      const simpleBorderStyle: React.CSSProperties = {
+        width: `${size}px`,
+        height: `${size}px`,
+        borderWidth: `${borderWidth}px`,
+        borderStyle: 'solid',
+        borderColor: currentVariant.borderColor.startsWith('border-') ? getColorFromTailwindClass(currentVariant.borderColor) : currentVariant.borderColor,
+        boxShadow: `0 0 ${8 * scale}px ${currentVariant.markerColor}, 0 0 ${16 * scale}px ${currentVariant.markerColor}80`, // Glow effect
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: `${Math.min(borderWidth / 1.5, 6 * scale)}px` // Adjusted padding
+      };
 
-          {/* Design Elements */}
-          {renderDesignElements()}
-
-          {/* Clock hands with enhanced styling */}
-          <div 
-            className={`absolute ${currentVariant.hourHandColor} transition-transform duration-1000 ease-in-out`}
-            style={{ 
-              width: `${scaledHourHandThickness}px`,
-              height: `${hourHandHeight}px`,
-              top: '50%',
-              left: '50%',
-              transform: `translate(-50%, -100%) rotate(${hourDegrees}deg)`,
-              transformOrigin: '50% 100%',
-              borderRadius: currentVariant.handStyle === 'sleek' ? `${scaledHourHandThickness / 2}px` : 
-                           currentVariant.handStyle === 'geometric' ? '0px' : 
-                           `${scaledHourHandThickness / 4}px`,
-              clipPath: currentVariant.handStyle === 'ornate' ? 'polygon(40% 0%, 60% 0%, 70% 20%, 60% 100%, 40% 100%, 30% 20%)' :
-                       currentVariant.handStyle === 'geometric' ? 'polygon(45% 0%, 55% 0%, 60% 30%, 55% 100%, 45% 100%, 40% 30%)' :
-                       currentVariant.handStyle === 'cosmic' ? 'polygon(47% 0%, 53% 0%, 55% 15%, 53% 100%, 47% 100%, 45% 15%)' :
-                       'none',
-              boxShadow: currentVariant.design === 'modern' && currentVariant.hasNeonGlow ? 
-                `0 0 8px ${currentVariant.hourHandColor.replace('bg-', '').replace('white', '#ffffff').replace('blue-400', '#60a5fa')}` : 'none'
-            }}
-          />
-          
-          <div 
-            className={`absolute ${currentVariant.minuteHandColor} transition-transform duration-1000 ease-in-out`}
-            style={{ 
-              width: `${scaledMinuteHandThickness}px`,
-              height: `${minuteHandHeight}px`,
-              top: '50%',
-              left: '50%',
-              transform: `translate(-50%, -100%) rotate(${minuteDegrees}deg)`,
-              transformOrigin: '50% 100%',
-              borderRadius: currentVariant.handStyle === 'sleek' ? `${scaledMinuteHandThickness / 2}px` : 
-                           currentVariant.handStyle === 'geometric' ? '0px' : 
-                           `${scaledMinuteHandThickness / 4}px`,
-              clipPath: currentVariant.handStyle === 'ornate' ? 'polygon(42% 0%, 58% 0%, 65% 25%, 58% 100%, 42% 100%, 35% 25%)' :
-                       currentVariant.handStyle === 'geometric' ? 'polygon(46% 0%, 54% 0%, 58% 35%, 54% 100%, 46% 100%, 42% 35%)' :
-                       currentVariant.handStyle === 'cosmic' ? 'polygon(48% 0%, 52% 0%, 54% 20%, 52% 100%, 48% 100%, 46% 20%)' :
-                       'none',
-              boxShadow: currentVariant.design === 'modern' && currentVariant.hasNeonGlow ? 
-                `0 0 6px ${currentVariant.minuteHandColor.replace('bg-', '').replace('white', '#ffffff').replace('blue-300', '#93c5fd')}` : 'none'
-            }}
-          />
-          
-          <div 
-            className={`absolute ${currentVariant.secondHandColor}`}
-            style={{ 
-              width: `${scaledSecondHandThickness}px`,
-              height: `${secondHandHeight}px`,
-              top: '50%',
-              left: '50%',
-              transform: `translate(-50%, -100%) rotate(${secondDegrees}deg)`,
-              transformOrigin: '50% 100%',
-              borderRadius: currentVariant.handStyle === 'sleek' ? `${scaledSecondHandThickness / 2}px` : 
-                           currentVariant.handStyle === 'geometric' ? '0px' : 
-                           `${scaledSecondHandThickness / 4}px`,
-              clipPath: currentVariant.handStyle === 'tactical' ? 'polygon(48% 0%, 52% 0%, 50% 10%, 52% 100%, 48% 100%, 50% 10%)' :
-                       currentVariant.handStyle === 'cosmic' ? 'polygon(49% 0%, 51% 0%, 50% 5%, 51% 100%, 49% 100%, 50% 5%)' :
-                       'none',
-              boxShadow: currentVariant.design === 'modern' && currentVariant.hasNeonGlow ? 
-                `0 0 4px ${currentVariant.secondHandColor.replace('bg-', '').replace('cyan-400', '#22d3ee')}` : 'none'
-            }}
-          />
-
-          {/* Center dot */}
-          <div 
-            className={`absolute ${currentVariant.centerDotColor} rounded-full z-10`} 
-            style={{
-              width: `${Math.max(8, centerDotSize)}px`,
-              height: `${Math.max(8, centerDotSize)}px`,
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-            }}
-          />
+      return (
+        <div
+          className={`relative mx-auto rounded-full`}
+          style={simpleBorderStyle}
+        >
+          <div className="relative rounded-full w-full h-full flex items-center justify-center">
+            {renderClockFace()}
+          </div>
         </div>
-      </div>
+      );
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      {renderClockWithBorder()}
     </div>
   );
 }
