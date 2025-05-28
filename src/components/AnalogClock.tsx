@@ -19,9 +19,6 @@ function AnalogClock({
 }: AnalogClockProps) {
   const [time, setTime] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const clockRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     setMounted(true);
     setTime(new Date());
@@ -34,29 +31,6 @@ function AnalogClock({
       clearInterval(timer);
     };
   }, []);
-
-  // Mouse interaction handlers for variant 0
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (variant === 0 && clockRef.current) {
-      const rect = clockRef.current.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const x = (e.clientX - centerX) / (rect.width / 2);
-      const y = (e.clientY - centerY) / (rect.height / 2);
-      setMousePosition({ x: x * 10, y: y * 10 }); // Amplify for subtle effect
-    }
-  };
-
-  const handleMouseEnter = () => {
-    if (variant === 0) setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    if (variant === 0) {
-      setIsHovered(false);
-      setMousePosition({ x: 0, y: 0 });
-    }
-  };
 
   const clockVariants = [
     // Variant 0: Dark Vintage Pocket Watch with Realistic Beveled Border
@@ -759,28 +733,56 @@ function AnalogClock({
               {renderClockFace()}
             </div>
           </div>        </div>
-      );
-    } else {
-      // Other variants: Simpler border with glow
-      const simpleBorderStyle: React.CSSProperties = {
-        width: `${size}px`,
-        height: `${size}px`,
-        borderWidth: `${borderWidth}px`,
-        borderStyle: 'solid',
-        borderColor: currentVariant.borderColor.startsWith('border-') ? getColorFromTailwindClass(currentVariant.borderColor) : currentVariant.borderColor,
-        boxShadow: `0 0 ${8 * scale}px ${currentVariant.markerColor}, 0 0 ${16 * scale}px ${currentVariant.markerColor}80`, // Glow effect
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: `${Math.min(borderWidth / 1.5, 6 * scale)}px` // Adjusted padding
-      };
-
+      );    } else {
+      // Other variants: 2-level 3D border (simplified version)
+      const borderColor = currentVariant.borderColor.startsWith('border-') ? getColorFromTailwindClass(currentVariant.borderColor) : currentVariant.borderColor;
+      
       return (
-        <div
-          className={`relative mx-auto rounded-full`}
-          style={simpleBorderStyle}
+        <div 
+          className="relative mx-auto" // Outer bezel container
+          style={{
+            width: `${size + 20}px`,
+            height: `${size + 20}px`,
+            background: `
+              radial-gradient(circle at 25% 25%, ${borderColor}40 0%, ${borderColor}60 20%, ${borderColor}80 50%, ${borderColor} 80%, ${borderColor}cc 100%)
+            `,
+            borderRadius: '50%',
+            boxShadow: `
+              0 0 0 1px ${borderColor}30,
+              0 0 0 2px ${borderColor}60,
+              inset 0 3px 6px rgba(0,0,0,0.3),
+              inset 0 -2px 4px rgba(255,255,255,0.1),
+              inset 1px 1px 3px rgba(255,255,255,0.15),
+              inset -1px -1px 3px rgba(0,0,0,0.2),
+              0 6px 12px rgba(0,0,0,0.3),
+              0 0 ${8 * scale}px ${currentVariant.markerColor}60
+            `,
+            padding: '5px',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+          }}
         >
-          <div className="relative rounded-full w-full h-full flex items-center justify-center">
+          {/* Inner metallic ring */}
+          <div 
+            className="relative" 
+            style={{
+              width: '100%',
+              height: '100%',
+              background: `
+                conic-gradient(from 0deg, 
+                  ${borderColor}80 0deg, ${borderColor}a0 90deg, ${borderColor}60 180deg, ${borderColor}a0 270deg, ${borderColor}80 360deg)
+              `,
+              borderRadius: '50%',
+              boxShadow: `
+                inset 0 2px 4px rgba(255,255,255,0.2),
+                inset 0 -2px 4px rgba(0,0,0,0.3),
+                inset 1px 1px 2px rgba(255,255,255,0.25),
+                inset -1px -1px 2px rgba(0,0,0,0.25),
+                0 0 0 1px ${borderColor}40,
+                0 1px 2px rgba(0,0,0,0.2)
+              `,
+              padding: '5px'
+            }}
+          >
             {renderClockFace()}
           </div>
         </div>
