@@ -92,7 +92,7 @@ const LoadingScreen = ({
       // Always scroll to top before starting transition
       window.scrollTo(0, 0);
 
-       onLoadingComplete?.(); // Call completion callback immediately when transition starts
+      onLoadingComplete?.(); // Call completion callback immediately when transition starts
       setIsTransitioning(true); // Start fade out transition
 
       setTimeout(() => {

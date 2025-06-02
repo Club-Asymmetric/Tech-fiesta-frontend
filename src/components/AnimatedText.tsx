@@ -88,6 +88,7 @@ const AnimatedText = ({
 
   return (
     <>
+      {" "}
       <style jsx>{`
         /* Existing styles from the component */
         .slide-enter-active {
@@ -107,6 +108,13 @@ const AnimatedText = ({
         }
         .slide-exit-to {
           opacity: 0;
+        }
+
+        /* Text glow effect */
+        .text-glow {
+          text-shadow: 0 0 4px rgba(255, 255, 255, 0.6),
+            0 0 8px rgba(255, 255, 255, 0.4), 0 0 12px rgba(255, 255, 255, 0.3),
+            0 0 20px rgba(255, 255, 255, 0.2), 0 0 25px rgba(255, 255, 255, 0.1);
         }
 
         .char-spin {
@@ -183,15 +191,15 @@ const AnimatedText = ({
           animation-name: spin-1440-neg;
         }
       `}</style>
-
       <div className={`fixed inset-0 z-30 ${className} overflow-hidden`}>
+        {" "}
         {/* Step 1: Sliding Text */}
         <div
           className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ease-out ${
             step === 1 ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <h1 className="text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider">
+          <h1 className="text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-glow font-sans">
             <span
               className={`inline-block transition-all duration-1000 ease-out ${
                 step === 1
@@ -218,7 +226,6 @@ const AnimatedText = ({
             </span>
           </h1>
         </div>
-
         {/* Step 2: Combined Spinning Text */}
         <div
           className={`absolute inset-0 flex items-center justify-center ${
@@ -233,7 +240,7 @@ const AnimatedText = ({
               perspective: "1000px", // For 3D effect of X-axis rotation
             }}
           >
-            <h1 className="relative text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white">
+            <h1 className="relative text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
               {text.split("").map((char, index) => (
                 <span
                   key={`char-${index}`}
