@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 
 interface AnimatedTextProps {
   text?: string;
@@ -19,10 +25,12 @@ const AnimatedText = ({
   const [charAnimationDetails, setCharAnimationDetails] = useState<
     { className: string; duration: string; delay: string }[]
   >([]);
-
+  const textRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const slideDuration = 1000;
-    const spinPhaseDuration = 2500;
+    const moveDelay = 500; // Small movement after sliding
+    const spinPhaseDuration = 4000; // Increased from 2500
+    const totalDuration = 1500;
 
     const timer1 = setTimeout(() => {
       setStep(1);
@@ -30,19 +38,23 @@ const AnimatedText = ({
 
     const timer2 = setTimeout(() => {
       setStep(2);
-    }, delay + slideDuration);
+    }, delay + slideDuration + moveDelay);
 
     const timer3 = setTimeout(() => {
+      setStep(3);
+    }, delay + slideDuration + moveDelay + 500); // Asymmetric appears 500ms after spinning starts
+
+    const timer4 = setTimeout(() => {
       onAnimationComplete?.();
-    }, delay + slideDuration + spinPhaseDuration);
+    }, delay + slideDuration + moveDelay + spinPhaseDuration + totalDuration);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
+      clearTimeout(timer4);
     };
-  }, [delay, onAnimationComplete, text]);
-
+  }, [delay, onAnimationComplete]);
   const spinVariations = useMemo(
     () => [
       "spin-360-pos",
@@ -76,7 +88,7 @@ const AnimatedText = ({
         text.split("").map((_, index) => ({
           className: getRandomSpinClass(),
           duration: getRandomDuration(),
-          delay: `${index * 0.05}s`, // Sequential delay
+          delay: `${index * 0.05}s`,
         }))
       );
     }
@@ -88,9 +100,7 @@ const AnimatedText = ({
 
   return (
     <>
-      {" "}
       <style jsx>{`
-        /* Existing styles from the component */
         .slide-enter-active {
           transition: all 1s ease-out;
         }
@@ -110,20 +120,17 @@ const AnimatedText = ({
           opacity: 0;
         }
 
-        /* Text glow effect */
         .text-glow {
           text-shadow: 0 0 4px rgba(255, 255, 255, 0.6),
             0 0 8px rgba(255, 255, 255, 0.4), 0 0 12px rgba(255, 255, 255, 0.3),
             0 0 20px rgba(255, 255, 255, 0.2), 0 0 25px rgba(255, 255, 255, 0.1);
         }
-
         .char-spin {
-          display: inline-block; /* Ensures transform-origin is respected */
+          display: inline-block;
           transform-origin: center;
-          backface-visibility: hidden; /* For cleaner 3D rotation */
+          backface-visibility: hidden;
         }
 
-        /* Spin animations (now RotateX) */
         @keyframes spin-360-pos {
           to {
             transform: rotateX(360deg);
@@ -165,7 +172,6 @@ const AnimatedText = ({
           }
         }
 
-        /* Add class selectors for spin animations */
         .spin-360-pos {
           animation-name: spin-360-pos;
         }
@@ -190,23 +196,60 @@ const AnimatedText = ({
         .spin-1440-neg {
           animation-name: spin-1440-neg;
         }
+        @keyframes asymmetric-bounce {
+          0% {
+            transform: translateY(20px) scale(0.8);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.3;
+          }
+          30% {
+            transform: translateY(-40px) scale(1.1);
+            opacity: 0.7;
+          }
+          60% {
+            transform: translateY(-20px) scale(1.05);
+            opacity: 0.9;
+          }
+          80% {
+            transform: translateY(-5px) scale(1.02);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+        }
+
+        .asymmetric-bounce {
+          animation-name: asymmetric-bounce;
+          animation-duration: 1.2s;
+          animation-timing-function: ease-out;
+          animation-fill-mode: forwards;
+        }
       `}</style>
+
       <div className={`fixed inset-0 z-30 ${className} overflow-hidden`}>
         {" "}
         {/* Step 1: Sliding Text */}
         <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ease-out ${
-            step === 1 ? "opacity-100" : "opacity-0 pointer-events-none"
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out ${
+            step === 1 ? "opacity-100" : "opacity-0"
           }`}
+          style={{
+            transform: step === 1 ? "translateY(-10px)" : "translateY(0px)",
+            pointerEvents: step === 1 ? "auto" : "none",
+          }}
         >
-          <h1 className="text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-glow font-sans">
+          <h1 className="text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
             <span
               className={`inline-block transition-all duration-1000 ease-out ${
                 step === 1
                   ? "translate-x-0 opacity-100"
                   : step === 0
                   ? "-translate-x-full opacity-0"
-                  : "translate-x-0 opacity-0" // Stays in place, fades with parent's opacity transition
+                  : "translate-x-0 opacity-0"
               }`}
               style={{ marginRight: "0.25em" }}
             >
@@ -218,46 +261,75 @@ const AnimatedText = ({
                   ? "translate-x-0 opacity-100"
                   : step === 0
                   ? "translate-x-full opacity-0"
-                  : "translate-x-0 opacity-0" // Stays in place, fades with parent's opacity transition
+                  : "translate-x-0 opacity-0"
               }`}
               style={{ marginLeft: "0.25em" }}
             >
               {rightWord}
             </span>
           </h1>
-        </div>
-        {/* Step 2: Combined Spinning Text */}
+        </div>{" "}
+        {/* Step 2 & 3: Spinning Text with Asymmetric emerging */}
         <div
-          className={`absolute inset-0 flex items-center justify-center ${
-            step === 2 ? "opacity-100" : "opacity-0 pointer-events-none"
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out ${
+            step >= 2 ? "opacity-100" : "opacity-0"
           }`}
+          style={{
+            transform: step >= 2 ? "translateY(0px)" : "translateY(-10px)",
+            pointerEvents: step >= 2 ? "auto" : "none",
+          }}
         >
-          {/* Spinning Text - will no longer fade out */}
-          <div
-            className={`${step === 2 ? "" : ""}`} // Removed animate-fadeOutSpinningText
-            style={{
-              // animationDuration: `${2500 / 1000}s`, // spinPhaseDuration - No longer needed for fade out
-              perspective: "1000px", // For 3D effect of X-axis rotation
-            }}
-          >
-            <h1 className="relative text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
-              {text.split("").map((char, index) => (
-                <span
-                  key={`char-${index}`}
-                  className={`relative inline-block char-spin ${
-                    charAnimationDetails[index]?.className || ""
-                  }`}
-                  style={{
-                    animationDuration: charAnimationDetails[index]?.duration,
-                    animationDelay: charAnimationDetails[index]?.delay,
-                    animationTimingFunction: "ease-out",
-                    animationFillMode: "forwards",
-                  }}
-                >
-                  {char === " " ? "\u00A0" : char} {/* Corrected space char */}
-                </span>
-              ))}
-            </h1>
+          <div className="relative flex flex-col items-center">
+            {" "}
+            {/* Asymmetric Text - appears above and emerges from spinning text */}
+            <div
+              className={`transition-all duration-300 ease-out`}
+              style={{ marginBottom: "1rem" }}
+            >
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-wider text-white text-glow font-sans">
+                {"Asymmetric".split("").map((char, index) => (
+                  <span
+                    key={`asymmetric-${index}`}
+                    className={`inline-block ${
+                      step >= 3 ? "asymmetric-bounce" : ""
+                    }`}
+                    style={{
+                      animationDelay: `${index * 0.1}s`,
+                      transform: "translateY(20px) scale(0.8)",
+                      opacity: 0,
+                    }}
+                  >
+                    {char}
+                  </span>
+                ))}
+              </h1>
+            </div>
+            {/* Tech Fiesta Text - continues spinning */}
+            <div
+              ref={textRef}
+              style={{
+                perspective: "1000px",
+              }}
+            >
+              <h1 className="relative text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
+                {text.split("").map((char, index) => (
+                  <span
+                    key={`char-${index}`}
+                    className={`relative inline-block char-spin ${
+                      charAnimationDetails[index]?.className || ""
+                    }`}
+                    style={{
+                      animationDuration: charAnimationDetails[index]?.duration,
+                      animationDelay: charAnimationDetails[index]?.delay,
+                      animationTimingFunction: "ease-out",
+                      animationFillMode: "forwards",
+                    }}
+                  >
+                    {char === " " ? "\u00A0" : char}
+                  </span>
+                ))}
+              </h1>
+            </div>
           </div>
         </div>
       </div>
