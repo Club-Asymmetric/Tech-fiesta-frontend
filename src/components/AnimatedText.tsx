@@ -39,20 +39,24 @@ const AnimatedText = ({
     const timer2 = setTimeout(() => {
       setStep(2);
     }, delay + slideDuration + moveDelay);
-
     const timer3 = setTimeout(() => {
       setStep(3);
     }, delay + slideDuration + moveDelay + 500); // Asymmetric appears 500ms after spinning starts
 
     const timer4 = setTimeout(() => {
+      setStep(4);
+    }, delay + slideDuration + moveDelay + spinPhaseDuration - 1000); // Coming Soon appears 1s before spinning ends
+
+    const timer5 = setTimeout(() => {
       onAnimationComplete?.();
-    }, delay + slideDuration + moveDelay + spinPhaseDuration + totalDuration);
+    }, delay + slideDuration + moveDelay + spinPhaseDuration + totalDuration + 1000);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
       clearTimeout(timer4);
+      clearTimeout(timer5);
     };
   }, [delay, onAnimationComplete]);
   const spinVariations = useMemo(
@@ -221,12 +225,68 @@ const AnimatedText = ({
             opacity: 1;
           }
         }
-
         .asymmetric-bounce {
           animation-name: asymmetric-bounce;
           animation-duration: 1.2s;
           animation-timing-function: ease-out;
           animation-fill-mode: forwards;
+        }
+        @keyframes swingChain {
+          0%,
+          100% {
+            transform: rotate(-3deg) translateX(-2px);
+          }
+          50% {
+            transform: rotate(3deg) translateX(2px);
+          }
+        }
+        @keyframes dropDownSign {
+          0% {
+            transform: translateY(-30px) scale(0.8);
+            opacity: 0;
+          }
+          50% {
+            transform: translateY(5px) scale(1.05);
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideUpFromBottom {
+          0% {
+            transform: translateY(100px);
+            opacity: 0;
+          }
+          50% {
+            transform: translateY(-10px);
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .slide-up-from-bottom {
+          animation-name: slideUpFromBottom;
+          animation-duration: 1.5s;
+          animation-timing-function: ease-out;
+          animation-fill-mode: forwards;
+        }
+
+        /* Custom responsive styles for very small screens (320px and below) */
+        @media (max-width: 320px) {
+          .tech-fiesta-text {
+            font-size: 2rem !important; /* 32px instead of text-5xl (48px) */
+          }
+          .asymmetric-text {
+            font-size: 1.75rem !important; /* 28px instead of text-4xl (36px) */
+          }
+          .coming-soon-text {
+            font-size: 1rem !important; /* 16px instead of text-xl (20px) */
+          }
         }
       `}</style>
 
@@ -242,7 +302,7 @@ const AnimatedText = ({
             pointerEvents: step === 1 ? "auto" : "none",
           }}
         >
-          <h1 className="text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
+          <h1 className="tech-fiesta-text text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
             <span
               className={`inline-block transition-all duration-1000 ease-out ${
                 step === 1
@@ -286,7 +346,7 @@ const AnimatedText = ({
               className={`transition-all duration-300 ease-out`}
               style={{ marginBottom: "1rem" }}
             >
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-wider text-white text-glow font-sans">
+              <h1 className="asymmetric-text text-4xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-wider text-white text-glow font-sans">
                 {"Asymmetric".split("").map((char, index) => (
                   <span
                     key={`asymmetric-${index}`}
@@ -303,33 +363,67 @@ const AnimatedText = ({
                   </span>
                 ))}
               </h1>
-            </div>
+            </div>{" "}
             {/* Tech Fiesta Text - continues spinning */}
             <div
               ref={textRef}
+              className="relative"
               style={{
                 perspective: "1000px",
               }}
             >
-              <h1 className="relative text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
-                {text.split("").map((char, index) => (
-                  <span
-                    key={`char-${index}`}
-                    className={`relative inline-block char-spin ${
-                      charAnimationDetails[index]?.className || ""
-                    }`}
-                    style={{
-                      animationDuration: charAnimationDetails[index]?.duration,
-                      animationDelay: charAnimationDetails[index]?.delay,
-                      animationTimingFunction: "ease-out",
-                      animationFillMode: "forwards",
-                    }}
-                  >
-                    {char === " " ? "\u00A0" : char}
-                  </span>
-                ))}
-              </h1>
-            </div>
+              <h1 className="tech-fiesta-text relative text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
+                {" "}
+                {text.split("").map((char, index) => {
+                  return (
+                    <span
+                      key={`char-${index}`}
+                      className={`relative inline-block char-spin ${
+                        charAnimationDetails[index]?.className || ""
+                      }`}
+                      style={{
+                        animationDuration:
+                          charAnimationDetails[index]?.duration,
+                        animationDelay: charAnimationDetails[index]?.delay,
+                        animationTimingFunction: "ease-out",
+                        animationFillMode: "forwards",
+                      }}
+                    >
+                      {char === " " ? "\u00A0" : char}
+                    </span>
+                  );
+                })}{" "}
+              </h1>{" "}
+            </div>{" "}
+          </div>
+        </div>
+        {/* Step 4: Coming Soon Text - appears from bottom */}
+        <div
+          className={`absolute bottom-20 left-0 right-0 flex items-center justify-center transition-all duration-500 ease-out ${
+            step >= 4 ? "opacity-100" : "opacity-0"
+          }`}
+          style={{
+            pointerEvents: step >= 4 ? "auto" : "none",
+          }}
+        >
+          <div className="text-center">
+            <h2 className="coming-soon-text text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold tracking-wider text-white text-glow font-sans">
+              {"Coming Soon".split("").map((char, index) => (
+                <span
+                  key={`coming-soon-${index}`}
+                  className={`inline-block ${
+                    step >= 4 ? "slide-up-from-bottom" : ""
+                  }`}
+                  style={{
+                    animationDelay: `${index * 0.1}s`,
+                    transform: "translateY(100px)",
+                    opacity: 0,
+                  }}
+                >
+                  {char === " " ? "\u00A0" : char}
+                </span>
+              ))}
+            </h2>
           </div>
         </div>
       </div>
