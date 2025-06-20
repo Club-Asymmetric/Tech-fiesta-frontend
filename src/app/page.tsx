@@ -5,6 +5,10 @@ import ClockCollection from "@/components/ClockCollection";
 import LoadingScreen from "@/components/LoadingScreen";
 import AnimatedText from "@/components/AnimatedText";
 import NavBar from "@/components/NavBar";
+import EventGrid from "@/components/EventGrid";
+import WorkshopGrid from "@/components/WorkshopGrid";
+import { events } from "@/data/events";
+import { workshops } from "@/data/workshops";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
@@ -73,36 +77,74 @@ export default function Home() {
                     onAnimationComplete={handleTextAnimationComplete}
                   />
                 </div>
-              </div>
+              </div>{" "}
               {/* Additional content sections for scrolling */}
-              <section className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                <div className="text-center text-white">
-                  <h2 className="text-6xl font-bold mb-4">About</h2>
-                  <p className="text-xl max-w-2xl">
+              <section
+                id="about"
+                className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm"
+              >
+                <div className="text-center text-white max-w-4xl px-4">
+                  <h2 className="text-4xl sm:text-6xl font-bold mb-6">
+                    About Tech Fiesta
+                  </h2>
+                  <p className="text-lg sm:text-xl mb-8 leading-relaxed">
                     Discover the future of technology at our premier tech
                     festival. Join innovators, creators, and tech enthusiasts
-                    from around the world.
+                    from around the world for an unforgettable experience of
+                    learning, networking, and innovation.
                   </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12">
+                    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
+                      <div className="text-3xl font-bold text-purple-400 mb-2">
+                        500+
+                      </div>
+                      <div className="text-gray-300">Attendees Expected</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
+                      <div className="text-3xl font-bold text-blue-400 mb-2">
+                        20+
+                      </div>
+                      <div className="text-gray-300">Industry Speakers</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
+                      <div className="text-3xl font-bold text-green-400 mb-2">
+                        3
+                      </div>
+                      <div className="text-gray-300">Days of Innovation</div>
+                    </div>
+                  </div>
+                </div>
+              </section>{" "}
+              <section
+                id="events"
+                className="w-full min-h-screen bg-black/20 backdrop-blur-sm py-20 px-4"
+              >
+                <div className="max-w-7xl mx-auto">
+                  <EventGrid
+                    events={events}
+                    title="Featured Events"
+                    showFilter={true}
+                  />
                 </div>
               </section>
-              <section className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                <div className="text-center text-white">
-                  <h2 className="text-6xl font-bold mb-4">Events</h2>
-                  <p className="text-xl max-w-2xl">
-                    Experience cutting-edge demos, keynote speeches, and
-                    networking opportunities with industry leaders and
-                    breakthrough technologies.
-                  </p>
-                </div>
-              </section>
-              <section className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                <div className="text-center text-white">
-                  <h2 className="text-6xl font-bold mb-4">Workshops</h2>
-                  <p className="text-xl max-w-2xl">
-                    Hands-on learning experiences in AI, blockchain, web
-                    development, and emerging technologies. Learn from experts
-                    and build real projects.
-                  </p>
+              <section
+                id="workshops"
+                className="w-full min-h-screen bg-black/20 backdrop-blur-sm py-20 px-4"
+              >
+                <div className="max-w-7xl mx-auto">
+                  <WorkshopGrid
+                    workshops={workshops.map(w => ({
+                      ...w,
+                      level:
+                        w.level === "Beginner" ||
+                        w.level === "Intermediate" ||
+                        w.level === "Advanced"
+                          ? w.level
+                          : undefined,
+                    }))}
+                    title="Hands-On Workshops"
+                    showFilter={true}
+                  />
                 </div>
               </section>
             </>

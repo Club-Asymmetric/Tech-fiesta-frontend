@@ -9,6 +9,18 @@ export default function NavBar() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+    // Close mobile menu if open
+    setIsMenuOpen(false);
+  };
+
   return (
     <>
       <nav className="fixed top-4 left-0 z-50 w-full flex justify-center pointer-events-none animate-[slideDown_0.4s_ease-out_forwards]">
@@ -139,31 +151,38 @@ export default function NavBar() {
           }
         `}</style>{" "}
         {/* Main navbar container */}
-        <div className="glassmorphism rounded-full px-3 sm:px-4 lg:px-5 py-3 sm:py-3.5 lg:py-4 relative overflow-hidden pointer-events-auto max-w-2xl w-full mx-3 sm:mx-4 flex justify-center">
-          <div className="flex items-center justify-between px-2 sm:px-3 lg:px-3 w-full">
+        <div className="glassmorphism rounded-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 relative overflow-hidden pointer-events-auto max-w-xl w-full mx-3 sm:mx-4 flex justify-center">
+          <div className="flex items-center justify-between px-1 sm:px-2 lg:px-2 w-full">
             {/* Asymmetric Logo */}
             <div className="flex-shrink-0">
-              <h1 className="text-sm sm:text-base lg:text-lg font-bold tracking-wider cursor-pointer bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              <h1 className="text-xs sm:text-sm lg:text-base font-bold tracking-wider cursor-pointer bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 Asymmetric
               </h1>
-            </div>
-
+            </div>{" "}
             {/* Desktop Navigation Buttons */}
             <div className="hidden lg:flex items-center space-x-1">
-              <button className="nav-button text-white px-3 py-2 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100">
+              <button
+                onClick={() => scrollToSection("about")}
+                className="nav-button text-white px-2 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100"
+              >
                 About
               </button>
-              <button className="nav-button text-white px-3 py-2 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100">
+              <button
+                onClick={() => scrollToSection("events")}
+                className="nav-button text-white px-2 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100"
+              >
                 Events
               </button>
-              <button className="nav-button text-white px-3 py-2 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100">
+              <button
+                onClick={() => scrollToSection("workshops")}
+                className="nav-button text-white px-2 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100"
+              >
                 Workshops
               </button>
-              <button className="register-button text-white px-3 py-2 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100">
+              <button className="register-button text-white px-2 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100">
                 Register
               </button>
             </div>
-
             {/* Mobile Hamburger Menu */}
             <div className="lg:hidden flex items-center justify-center">
               <button
@@ -215,23 +234,24 @@ export default function NavBar() {
 
           {/* Mobile menu */}
           <div className="lg:hidden fixed top-14 left-3 right-3 z-50 pointer-events-auto">
+            {" "}
             <div className="mobile-glassmorphism rounded-xl px-4 py-4">
               <div className="grid grid-cols-1 gap-2.5">
                 <button
                   className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => scrollToSection("about")}
                 >
                   About
                 </button>
                 <button
                   className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => scrollToSection("events")}
                 >
                   Events
                 </button>
                 <button
                   className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => scrollToSection("workshops")}
                 >
                   Workshops
                 </button>
