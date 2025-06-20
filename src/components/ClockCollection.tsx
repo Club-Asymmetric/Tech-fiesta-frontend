@@ -281,7 +281,7 @@ const ClockCollection = ({
   }, [isInitialized, viewportSize !== null]);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black">
+    <div className="relative min-h-screen w-full overflow-hidden bg-black grayscale-100">
       {" "}
       {/* Main clock in center - exclusively uses variant 0 (enhanced 3D beveled border) */}
       <div
