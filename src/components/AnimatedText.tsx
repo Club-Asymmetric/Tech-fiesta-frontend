@@ -17,20 +17,23 @@ interface AnimatedTextProps {
 
 const AnimatedText = ({
   text = "Tech Fiesta",
-  delay = 1000,
+  delay = 500,
   className = "",
   onAnimationComplete,
 }: AnimatedTextProps) => {
   const [step, setStep] = useState(0);
+  const [animateCount, setAnimateCount] = useState(0);
   const [charAnimationDetails, setCharAnimationDetails] = useState<
     { className: string; duration: string; delay: string }[]
   >([]);
   const textRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    // Only animate if it hasn't animated before (animateCount is 0)
+    if (animateCount >= 1) {
+      return;
+    }
     const slideDuration = 1000;
     const moveDelay = 500; // Small movement after sliding
-    const spinPhaseDuration = 4000; // Increased from 2500
-    const totalDuration = 1500;
 
     const timer1 = setTimeout(() => {
       setStep(1);
@@ -45,11 +48,12 @@ const AnimatedText = ({
 
     const timer4 = setTimeout(() => {
       setStep(4);
-    }, delay + slideDuration + moveDelay + spinPhaseDuration - 1000); // Coming Soon appears 1s before spinning ends
+    }, delay + slideDuration + moveDelay + 1200); // Coming Soon appears 1.2s after step 3
 
     const timer5 = setTimeout(() => {
+      setAnimateCount((prev) => prev + 1); // Increment animate count
       onAnimationComplete?.();
-    }, delay + slideDuration + moveDelay + spinPhaseDuration + totalDuration + 1000);
+    }, delay + slideDuration + moveDelay + 1200 + 500); // Callback 500ms after "Coming Soon" appears
 
     return () => {
       clearTimeout(timer1);
@@ -58,7 +62,7 @@ const AnimatedText = ({
       clearTimeout(timer4);
       clearTimeout(timer5);
     };
-  }, [delay, onAnimationComplete]);
+  }, [delay, onAnimationComplete, animateCount]);
   const spinVariations = useMemo(
     () => [
       "spin-360-pos",
@@ -290,7 +294,7 @@ const AnimatedText = ({
         }
       `}</style>
 
-      <div className={`fixed inset-0 z-30 ${className} overflow-hidden`}>
+      <div className={`absolute inset-0 z-30 ${className} overflow-hidden`}>
         {" "}
         {/* Step 1: Sliding Text */}
         <div
