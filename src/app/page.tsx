@@ -42,31 +42,72 @@ export default function Home() {
           loadingTasks={loadingTasks}
           minimumDisplayTime={500}
         />
-      )}
+      )}{" "}
       <div
-        className={`min-h-screen w-full p-0 m-0 overflow-hidden ${
+        className={`relative min-h-screen w-full p-0 m-0 ${
           isLoading ? "opacity-0 pointer-events-none" : "opacity-100"
         } transition-opacity duration-500`}
       >
-        {" "}
-        <ClockCollection
-          mainClockSize={420}
-          smallClockCount={60}
-          onReady={handleClockCollectionReady}
-        />
-        {/* NavBar appears after animated text completes */}
-        {showNavBar && <NavBar />}{" "}
-        {/* Animated text that appears after clock is visible */}
-        {showAnimatedText && (
-          <>
-            <AnimatedText
-              text="TECH FIESTA"
-              delay={2000}
-              onAnimationComplete={handleTextAnimationComplete}
-            />
-            <div className="w-screen h-screen" />
-          </>
-        )}
+        {/* Fixed background clock collection */}
+        <div className="fixed inset-0 z-0">
+          <ClockCollection
+            mainClockSize={420}
+            smallClockCount={60}
+            onReady={handleClockCollectionReady}
+          />
+        </div>
+
+        {/* Content layer - scrollable */}
+        <div className="relative z-10">
+          {/* NavBar appears after animated text completes */}
+          {showNavBar && <NavBar />}{" "}
+          {/* Animated text that appears after clock is visible */}
+          {showAnimatedText && (
+            <>
+              {/* First screen with animated text - fixed positioning to ensure it stays at the top */}
+              <div className="w-full h-screen flex items-center justify-center relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <AnimatedText
+                    text="TECH FIESTA"
+                    delay={2000}
+                    onAnimationComplete={handleTextAnimationComplete}
+                  />
+                </div>
+              </div>
+              {/* Additional content sections for scrolling */}
+              <section className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                <div className="text-center text-white">
+                  <h2 className="text-6xl font-bold mb-4">About</h2>
+                  <p className="text-xl max-w-2xl">
+                    Discover the future of technology at our premier tech
+                    festival. Join innovators, creators, and tech enthusiasts
+                    from around the world.
+                  </p>
+                </div>
+              </section>
+              <section className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                <div className="text-center text-white">
+                  <h2 className="text-6xl font-bold mb-4">Events</h2>
+                  <p className="text-xl max-w-2xl">
+                    Experience cutting-edge demos, keynote speeches, and
+                    networking opportunities with industry leaders and
+                    breakthrough technologies.
+                  </p>
+                </div>
+              </section>
+              <section className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                <div className="text-center text-white">
+                  <h2 className="text-6xl font-bold mb-4">Workshops</h2>
+                  <p className="text-xl max-w-2xl">
+                    Hands-on learning experiences in AI, blockchain, web
+                    development, and emerging technologies. Learn from experts
+                    and build real projects.
+                  </p>
+                </div>
+              </section>
+            </>
+          )}
+        </div>
       </div>
     </>
   );

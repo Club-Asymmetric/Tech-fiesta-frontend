@@ -278,9 +278,7 @@ const AnimatedText = ({
           animation-duration: 1.5s;
           animation-timing-function: ease-out;
           animation-fill-mode: forwards;
-        }
-
-        /* Custom responsive styles for very small screens (320px and below) */
+        } /* Custom responsive styles for very small screens (320px and below) */
         @media (max-width: 320px) {
           .tech-fiesta-text {
             font-size: 2rem !important; /* 32px instead of text-5xl (48px) */
@@ -289,12 +287,21 @@ const AnimatedText = ({
             font-size: 1.75rem !important; /* 28px instead of text-4xl (36px) */
           }
           .coming-soon-text {
-            font-size: 1rem !important; /* 16px instead of text-xl (20px) */
+            font-size: 0.9rem !important; /* 14px for very small screens */
+          }
+        }
+
+        /* Additional mobile optimizations */
+        @media (max-width: 480px) {
+          .coming-soon-text {
+            font-size: 1rem !important; /* 16px for small mobile screens */
           }
         }
       `}</style>
 
-      <div className={`absolute inset-0 z-30 ${className} overflow-hidden`}>
+      <div
+        className={`relative w-full h-full z-30 ${className} overflow-hidden`}
+      >
         {" "}
         {/* Step 1: Sliding Text */}
         <div
@@ -399,19 +406,19 @@ const AnimatedText = ({
                 })}{" "}
               </h1>{" "}
             </div>{" "}
-          </div>
+          </div>{" "}
         </div>
         {/* Step 4: Coming Soon Text - appears from bottom */}
         <div
-          className={`absolute bottom-20 left-0 right-0 flex items-center justify-center transition-all duration-500 ease-out ${
+          className={`absolute bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 left-0 right-0 flex items-center justify-center transition-all duration-500 ease-out ${
             step >= 4 ? "opacity-100" : "opacity-0"
           }`}
           style={{
             pointerEvents: step >= 4 ? "auto" : "none",
           }}
         >
-          <div className="text-center">
-            <h2 className="coming-soon-text text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold tracking-wider text-white text-glow font-sans">
+          <div className="text-center px-4">
+            <h2 className="coming-soon-text text-base sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-wider text-white text-glow font-sans">
               {"Coming Soon".split("").map((char, index) => (
                 <span
                   key={`coming-soon-${index}`}
