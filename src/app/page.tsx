@@ -5,6 +5,7 @@ import ClockCollection from "@/components/ClockCollection";
 import LoadingScreen from "@/components/LoadingScreen";
 import AnimatedText from "@/components/AnimatedText";
 import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 import EventGrid from "@/components/EventGrid";
 import WorkshopGrid from "@/components/WorkshopGrid";
 import { events } from "@/data/events";
@@ -40,6 +41,23 @@ export default function Home() {
 
   return (
     <>
+      <style jsx global>{`
+        html,
+        body {
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          touch-action: pan-y;
+        }
+
+        /* Ensure mobile scrolling works properly */
+        @media (max-width: 768px) {
+          body {
+            position: relative;
+            height: auto;
+            min-height: 100vh;
+          }
+        }
+      `}</style>
       {isLoading && (
         <LoadingScreen
           onLoadingComplete={handleLoadingComplete}
@@ -48,12 +66,12 @@ export default function Home() {
         />
       )}{" "}
       <div
-        className={`relative min-h-screen w-full p-0 m-0 ${
+        className={`relative min-h-screen w-full p-0 m-0 overflow-x-hidden ${
           isLoading ? "opacity-0 pointer-events-none" : "opacity-100"
         } transition-opacity duration-500`}
       >
         {/* Fixed background clock collection */}
-        <div className="fixed inset-0 z-0">
+        <div className="fixed inset-0 z-0 pointer-events-none">
           <ClockCollection
             mainClockSize={420}
             smallClockCount={60}
@@ -62,7 +80,10 @@ export default function Home() {
         </div>
 
         {/* Content layer - scrollable */}
-        <div className="relative z-10">
+        <div
+          className="relative z-10 touch-pan-y"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           {/* NavBar appears after animated text completes */}
           {showNavBar && <NavBar />}{" "}
           {/* Animated text that appears after clock is visible */}
@@ -81,19 +102,19 @@ export default function Home() {
               {/* Additional content sections for scrolling */}
               <section
                 id="about"
-                className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm"
+                className="w-full min-h-screen flex items-center justify-center bg-black/20 backdrop-blur-sm py-8 sm:py-16"
               >
-                <div className="text-center text-white max-w-4xl px-4">
-                  <h2 className="text-4xl sm:text-6xl font-bold mb-6">
+                <div className="text-center text-white max-w-4xl px-4 sm:px-6">
+                  <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">
                     About Tech Fiesta
                   </h2>
-                  <p className="text-lg sm:text-xl mb-8 leading-relaxed">
+                  <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 leading-relaxed">
                     Discover the future of technology at our premier tech
                     festival. Join innovators, creators, and tech enthusiasts
                     from around the world for an unforgettable experience of
                     learning, networking, and innovation.
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12">
                     <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20">
                       <div className="text-3xl font-bold text-purple-400 mb-2">
                         500+
@@ -117,7 +138,7 @@ export default function Home() {
               </section>{" "}
               <section
                 id="events"
-                className="w-full min-h-screen bg-black/20 backdrop-blur-sm py-20 px-4"
+                className="w-full min-h-screen bg-black/20 backdrop-blur-sm py-12 sm:py-20 px-4"
               >
                 <div className="max-w-7xl mx-auto">
                   <EventGrid
@@ -129,11 +150,11 @@ export default function Home() {
               </section>
               <section
                 id="workshops"
-                className="w-full min-h-screen bg-black/20 backdrop-blur-sm py-20 px-4"
+                className="w-full min-h-screen bg-black/20 backdrop-blur-sm py-12 sm:py-20 px-4"
               >
                 <div className="max-w-7xl mx-auto">
                   <WorkshopGrid
-                    workshops={workshops.map(w => ({
+                    workshops={workshops.map((w) => ({
                       ...w,
                       level:
                         w.level === "Beginner" ||
@@ -147,6 +168,8 @@ export default function Home() {
                   />
                 </div>
               </section>
+              {/* Footer */}
+              <Footer />
             </>
           )}
         </div>

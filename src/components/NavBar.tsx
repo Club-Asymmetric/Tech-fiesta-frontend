@@ -101,51 +101,7 @@ export default function NavBar() {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
           }
 
-          .register-button {
-            position: relative;
-            background: linear-gradient(
-              135deg,
-              rgba(255, 255, 255, 0.25),
-              rgba(255, 255, 255, 0.2)
-            );
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15),
-              inset 0 1px 0 rgba(255, 255, 255, 0.25);
-          }
-
-          .register-button:hover {
-            background: linear-gradient(
-              135deg,
-              rgba(255, 255, 255, 0.35),
-              rgba(255, 255, 255, 0.25)
-            );
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.22),
-              0 2px 8px rgba(255, 255, 255, 0.3) inset;
-            cursor: pointer;
-          }
-
-          .mobile-register-button {
-            background: linear-gradient(
-              135deg,
-              rgba(255, 255, 255, 0.3),
-              rgba(255, 255, 255, 0.25)
-            );
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-          }
-
-          .mobile-register-button:active {
-            background: linear-gradient(
-              135deg,
-              rgba(255, 255, 255, 0.4),
-              rgba(255, 255, 255, 0.3)
-            );
-            transform: scale(0.98);
-          } /* Mobile overlay */
+          /* Mobile overlay */
           .mobile-overlay {
             animation: fadeIn 0.2s ease-out forwards;
           }
@@ -153,12 +109,20 @@ export default function NavBar() {
         {/* Main navbar container */}
         <div className="glassmorphism rounded-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 relative overflow-hidden pointer-events-auto max-w-xl w-full mx-3 sm:mx-4 flex justify-center">
           <div className="flex items-center justify-between px-1 sm:px-2 lg:px-2 w-full">
+            {" "}
             {/* Asymmetric Logo */}
             <div className="flex-shrink-0">
-              <h1 className="text-xs sm:text-sm lg:text-base font-bold tracking-wider cursor-pointer bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                Asymmetric
-              </h1>
-            </div>{" "}
+              <a
+                href="https://asymmetric.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block hover:scale-105 transition-transform duration-200"
+              >
+                <h1 className="text-xs sm:text-sm lg:text-base font-bold tracking-wider cursor-pointer bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent hover:from-blue-200 hover:to-purple-200 transition-all duration-300">
+                  Asymmetric
+                </h1>
+              </a>
+            </div>
             {/* Desktop Navigation Buttons */}
             <div className="hidden lg:flex items-center space-x-1">
               <button
@@ -177,10 +141,7 @@ export default function NavBar() {
                 onClick={() => scrollToSection("workshops")}
                 className="nav-button text-white px-2 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100"
               >
-                Workshops
-              </button>
-              <button className="register-button text-white px-2 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:text-gray-100">
-                Register
+                Workshops{" "}
               </button>
             </div>
             {/* Mobile Hamburger Menu */}
@@ -216,7 +177,7 @@ export default function NavBar() {
                   >
                     <path d="M6 18L18 6M6 6l12 12"></path>
                   </svg>
-                )}
+                )}{" "}
               </button>
             </div>
           </div>
@@ -253,13 +214,7 @@ export default function NavBar() {
                   className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
                   onClick={() => scrollToSection("workshops")}
                 >
-                  Workshops
-                </button>
-                <button
-                  className="mobile-register-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full mt-1"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Register
+                  Workshops{" "}
                 </button>
               </div>
             </div>
