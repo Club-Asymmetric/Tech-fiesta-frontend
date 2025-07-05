@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
           {/* Brand Section */}
           <div className="md:col-span-2 text-center md:text-left">
             <a
-              href="https://asymmetric.in/"
+              href="https://asymmetric-livid.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-3 hover:scale-105 transition-transform duration-200 mb-6"

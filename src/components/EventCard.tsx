@@ -1,5 +1,6 @@
 import React from "react";
 import { Event } from "@/types";
+import { generateRegistrationUrl } from "@/utils/registration";
 import SpotlightCard from "./ReactBits/SpotlightCard/SpotlightCard";
 
 interface EventCardProps {
@@ -15,6 +16,12 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       day: "numeric",
     };
     return new Date(dateString).toLocaleDateString("en-US", options);
+  };
+
+  const handleRegisterClick = () => {
+    const eventType = event.type === "tech" ? "event" : "non-tech";
+    const registrationUrl = generateRegistrationUrl(event.id, eventType);
+    window.location.href = registrationUrl;
   };
 
   return (
@@ -124,7 +131,10 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       )}{" "}
       {/* Registration Info */}
       <div className="flex justify-end pt-4 border-t border-white/10">
-        <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105">
+        <button 
+          onClick={handleRegisterClick}
+          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+        >
           Register Now
         </button>
       </div>

@@ -23,12 +23,19 @@ export default function NavBar() {
     { label: "About", href: "#about" },
     { label: "Events", href: "#events" },
     { label: "Workshops", href: "#workshops" },
+    { label: "Register", href: "/registration" },
   ];
 
   // Handle navigation clicks
   const handleNavClick = (href: string) => {
-    const sectionId = href.replace("#", "");
-    scrollToSection(sectionId);
+    if (href.startsWith("/")) {
+      // External route - navigate to page
+      window.location.href = href;
+    } else {
+      // Internal anchor - scroll to section
+      const sectionId = href.replace("#", "");
+      scrollToSection(sectionId);
+    }
   };
 
   return (
@@ -84,7 +91,7 @@ export default function NavBar() {
         `}</style>
 
         {/* Main navbar container */}
-        <div className="glassmorphism rounded-full px-4 py-3 relative overflow-hidden pointer-events-auto max-w-2xl w-full mx-3 sm:mx-4 flex justify-center">
+        <div className="glassmorphism rounded-full px-4 py-3 relative overflow-hidden pointer-events-auto max-w-3xl w-full mx-3 sm:mx-4 flex justify-center">
           <div className="flex items-center justify-between w-full">
             {/* Asymmetric Logo */}
             <div className="flex-shrink-0 relative top-1 sm:top-0.5">
@@ -191,6 +198,12 @@ export default function NavBar() {
                   onClick={() => scrollToSection("workshops")}
                 >
                   Workshops
+                </button>
+                <button
+                  className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
+                  onClick={() => window.location.href = "/registration"}
+                >
+                  Register
                 </button>
               </div>
             </div>

@@ -13,10 +13,11 @@ export const events: Event[] = [
     description:
       "High-stakes challenge where teams analyze unique VM-Snapshots, identify vulnerabilities, and gain access. Demonstrate advanced system security, reverse engineering, and privilege escalation techniques.",
     speakers: ["Cybersecurity Experts", "Ethical Hackers"],
-    capacity: 50,
+    capacity: 60,
     registrations: 0,
     tags: ["Security", "VM", "Reverse Engineering", "Signature Event"],
     image: "/images/try-if-you-can.jpg",
+    price: "₹69",
   },
   {
     id: 2,
@@ -28,10 +29,11 @@ export const events: Event[] = [
     description:
       "Write code in reverse order! If the problem is to print 'hello world', you must code it backwards. A unique challenge that tests your programming logic and creativity.",
     speakers: ["Programming Mentors"],
-    capacity: 80,
+    capacity: 60,
     registrations: 0,
     tags: ["Programming", "Logic", "Creative Coding"],
     image: "/images/reverse-code.jpg",
+    price: "₹69",
   },
   {
     id: 3,
@@ -43,10 +45,11 @@ export const events: Event[] = [
     description:
       "Solve interconnected problems to progress through levels. Retrieve passwords using hints and answer security questions based on clues. A digital escape room experience!",
     speakers: ["Puzzle Masters", "Security Analysts"],
-    capacity: 40,
+    capacity: 60,
     registrations: 0,
     tags: ["Problem Solving", "Security", "Puzzles"],
     image: "/images/escape-room.jpg",
+    price: "₹69",
   },
   {
     id: 4,
@@ -62,6 +65,7 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["AI", "Prompt Engineering", "Creative AI"],
     image: "/images/prompt-engineering.jpg",
+    price: "₹69",
   },
   {
     id: 5,
@@ -73,10 +77,11 @@ export const events: Event[] = [
     description:
       "Develop feasible solutions to given problems. Present innovative and practical approaches that effectively address requirements and demonstrate technical excellence.",
     speakers: ["Industry Experts", "Project Mentors"],
-    capacity: 100,
+    capacity: 60,
     registrations: 0,
     tags: ["Presentation", "Innovation", "Problem Solving"],
     image: "/images/project-presentation.jpg",
+    price: "₹69",
   },
   {
     id: 6,
@@ -88,10 +93,11 @@ export const events: Event[] = [
     description:
       "Solve challenges using hints and flags from various domains including cryptography and web vulnerabilities. Compete in any order and showcase your diverse technical skills.",
     speakers: ["CTF Champions", "Security Researchers"],
-    capacity: 120,
+    capacity: 60,
     registrations: 0,
     tags: ["CTF", "Cryptography", "Web Security", "Competition"],
     image: "/images/ctf.jpg",
+    price: "₹69",
   },
   // Non-Technical Events
   {
@@ -104,10 +110,11 @@ export const events: Event[] = [
     description:
       "Fast-paced improv game where teams act out scenes from random TV genres - news, drama, sports, etc. Switch roles on the spot with humor and creativity!",
     speakers: ["Improv Artists", "Entertainment Hosts"],
-    capacity: 150,
+    capacity: 60,
     registrations: 0,
     tags: ["Improv", "Entertainment", "Creativity", "Team Building"],
     image: "/images/channel-surfing.jpg",
+    price: "₹47",
   },
   {
     id: 8,
@@ -119,10 +126,11 @@ export const events: Event[] = [
     description:
       "Storytelling challenge where participants build creative, humorous stories using random prompts. Test your spontaneity, imagination, and public speaking skills!",
     speakers: ["Storytellers", "Creative Writers"],
-    capacity: 80,
+    capacity: 60,
     registrations: 0,
     tags: ["Storytelling", "Creativity", "Public Speaking"],
     image: "/images/spin-a-yarn.jpg",
+    price: "₹47",
   },
   {
     id: 9,
@@ -134,10 +142,11 @@ export const events: Event[] = [
     description:
       "Capture the essence, excitement, and emotions of TechFiesta! Submit your best shots highlighting perspective, composition, and storytelling through the lens.",
     speakers: ["Professional Photographers", "Visual Artists"],
-    capacity: 200,
+    capacity: 60,
     registrations: 0,
     tags: ["Photography", "Visual Arts", "Contest", "Documentation"],
     image: "/images/photography.jpg",
+    price: "₹47",
   },
 ];
 
