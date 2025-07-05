@@ -28,7 +28,7 @@ body {
   -moz-filter: grayscale(100%);
   -o-filter: grayscale(100%);
   -ms-filter: grayscale(100%); */
-  opacity: 0.5;
+  opacity: 0.85;
   @media (max-width: 768px) {
     overflow: hidden;
 

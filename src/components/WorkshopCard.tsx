@@ -1,5 +1,6 @@
 import React from "react";
 import { Workshop } from "@/types";
+import SpotlightCard from "./ReactBits/SpotlightCard/SpotlightCard";
 
 interface WorkshopCardProps {
   workshop: Workshop;
@@ -17,7 +18,10 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
+    <SpotlightCard 
+      className="bg-white/10 backdrop-blur-md rounded-lg border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105"
+      spotlightColor="rgba(147, 51, 234, 0.4)"
+    >
       {/* Header with Price */}
       <div className="flex justify-end items-start mb-4">
         <div className="text-right">
@@ -139,7 +143,7 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
           </button>
         </div>
       </div>
-    </div>
+    </SpotlightCard>
   );
 };
 
