@@ -46,11 +46,7 @@ export default function NavBar() {
             }
           }
           .glassmorphism {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: rgba(10, 10, 10, 0.9);
           }
           @keyframes slideInFromTop {
             from {
@@ -69,14 +65,6 @@ export default function NavBar() {
             to {
               opacity: 1;
             }
-          }
-          .mobile-glassmorphism {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            animation: slideInFromTop 0.3s ease-out forwards;
           }
           .mobile-nav-button {
             background: rgba(255, 255, 255, 0.25);
