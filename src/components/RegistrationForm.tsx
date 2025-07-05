@@ -354,12 +354,12 @@ export default function RegistrationForm() {
                   value={formData.year}
                   onChange={(e) => handleInputChange("year", e.target.value)}
                 >
-                  <option value="">Select Year</option>
-                  <option value="1st">1st Year</option>
-                  <option value="2nd">2nd Year</option>
-                  <option value="3rd">3rd Year</option>
-                  <option value="4th">4th Year</option>
-                  <option value="Postgraduate">Postgraduate</option>
+                  <option value="" className="text-black">Select Year</option>
+                  <option value="1st" className="text-black">1st Year</option>
+                  <option value="2nd" className="text-black">2nd Year</option>
+                  <option value="3rd" className="text-black">3rd Year</option>
+                  <option value="4th" className="text-black">4th Year</option>
+                  <option value="Postgraduate" className="text-black">Postgraduate</option>
                 </select>
                 {errors.year && <p className="text-red-400 text-sm mt-1">{errors.year}</p>}
               </div>
