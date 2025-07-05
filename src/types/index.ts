@@ -14,6 +14,7 @@ export interface Event {
   tags?: string[];
   image?: string;
   price?: string; // Optional field for event price
+  maxTeamSize?: number; // Maximum team size for events that allow teams
 }
 
 export interface Workshop {
@@ -45,6 +46,12 @@ export interface TeamMember {
   whatsapp: string;
 }
 
+// Selected event/workshop item structure
+export interface SelectedItem {
+  id: number;
+  title: string;
+}
+
 export interface RegistrationFormData {
   // Primary participant details
   name: string;
@@ -59,10 +66,10 @@ export interface RegistrationFormData {
   teamSize?: number;
   teamMembers?: TeamMember[];
 
-  // Event selections
-  selectedEvents: number[];
-  selectedWorkshops: number[];
-  selectedNonTechEvents: number[];
+  // Event selections (storing both ID and title)
+  selectedEvents: SelectedItem[];
+  selectedWorkshops: SelectedItem[];
+  selectedNonTechEvents: SelectedItem[];
 
   // Payment details
   transactionIds: Record<string, string>; // Flexible structure for individual event/workshop transaction IDs

@@ -10,6 +10,8 @@ import { validateEmail, validatePhone, validateIndianTransactionId } from "@/uti
 import { CheckCircle, CreditCard, Mail, Phone, MessageCircle, PartyPopper, Calendar, MapPin, Clock } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import ClockCollection from "./ClockCollection";
+import { submitRegistration, checkDuplicateRegistration } from "@/services/registrationService";
+import { downloadRegistrationPDF, downloadRegistrationText, downloadRegistrationJSON, RegistrationDownloadData } from "@/utils/downloadUtils";
 
 export default function RegistrationForm() {
   const searchParams = useSearchParams();
@@ -26,9 +28,21 @@ export default function RegistrationForm() {
     isTeamEvent: false,
     teamSize: 1,
     teamMembers: [],
-    selectedEvents: preSelectedEventId && preSelectedEventType === "event" ? [parseInt(preSelectedEventId)] : [],
-    selectedWorkshops: preSelectedEventId && preSelectedEventType === "workshop" ? [parseInt(preSelectedEventId)] : [],
-    selectedNonTechEvents: preSelectedEventId && preSelectedEventType === "non-tech" ? [parseInt(preSelectedEventId)] : [],
+    selectedEvents: preSelectedEventId && preSelectedEventType === "event" ? 
+      (() => {
+        const event = events.find(e => e.id === parseInt(preSelectedEventId));
+        return event ? [{ id: event.id, title: event.title }] : [];
+      })() : [],
+    selectedWorkshops: preSelectedEventId && preSelectedEventType === "workshop" ? 
+      (() => {
+        const workshop = workshops.find(w => w.id === parseInt(preSelectedEventId));
+        return workshop ? [{ id: workshop.id, title: workshop.title }] : [];
+      })() : [],
+    selectedNonTechEvents: preSelectedEventId && preSelectedEventType === "non-tech" ? 
+      (() => {
+        const event = events.find(e => e.id === parseInt(preSelectedEventId) && e.type === "non-tech");
+        return event ? [{ id: event.id, title: event.title }] : [];
+      })() : [],
     transactionIds: {},
     hasConsented: false,
   });
@@ -36,14 +50,20 @@ export default function RegistrationForm() {
   const [showQuickContact, setShowQuickContact] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [successData, setSuccessData] = useState<{
+    registrationId: string;
+    formData: RegistrationFormData;
+    submissionDate: string;
+  } | null>(null);
 
   // Payment QR data - Free entry, individual QRs for each event/workshop
   const generatePaymentQRs = (): PaymentQR[] => {
     const qrs: PaymentQR[] = [];
     
     // Individual QRs for selected tech events
-    formData.selectedEvents.forEach(eventId => {
-      const event = techEvents.find(e => e.id === eventId);
+    formData.selectedEvents.forEach(selectedEvent => {
+      const event = techEvents.find(e => e.id === selectedEvent.id);
       if (event) {
         qrs.push({
           type: "event",
@@ -57,8 +77,8 @@ export default function RegistrationForm() {
     });
     
     // Individual QRs for selected workshops
-    formData.selectedWorkshops.forEach(workshopId => {
-      const workshop = workshops.find(w => w.id === workshopId);
+    formData.selectedWorkshops.forEach(selectedWorkshop => {
+      const workshop = workshops.find(w => w.id === selectedWorkshop.id);
       if (workshop) {
         qrs.push({
           type: "workshop",
@@ -78,18 +98,46 @@ export default function RegistrationForm() {
   const techEvents = events.filter(event => event.type === "tech");
   const nonTechEvents = events.filter(event => event.type === "non-tech");
 
-  // Check if any selected events require teams
-  const requiresTeam = [...formData.selectedEvents, ...formData.selectedWorkshops]
-    .some(id => {
-      const event = events.find(e => e.id === id);
-      const workshop = workshops.find(w => w.id === id);
-      // Add logic here based on your event/workshop data to determine team requirements
-      return event?.title.toLowerCase().includes("team") || workshop?.title.toLowerCase().includes("team");
-    });
+  // Check if any selected events require teams and get the maximum team size allowed
+  const getTeamRequirements = () => {
+    const selectedEventsWithTeamLimits = formData.selectedEvents
+      .map(selectedEvent => events.find(e => e.id === selectedEvent.id))
+      .filter((event): event is Event => event !== undefined && event.maxTeamSize !== undefined);
+    
+    // For now, workshops don't have team limits, but if they do in the future:
+    // const selectedWorkshopsWithTeamLimits = formData.selectedWorkshops
+    //   .map(selectedWorkshop => workshops.find(w => w.id === selectedWorkshop.id))
+    //   .filter((workshop): workshop is Workshop & { maxTeamSize: number } => 
+    //     workshop !== undefined && (workshop as any).maxTeamSize !== undefined);
+
+    const allTeamEvents = selectedEventsWithTeamLimits;
+    
+    if (allTeamEvents.length === 0) {
+      return { requiresTeam: false, maxTeamSize: 1 };
+    }
+
+    // Get the minimum maxTeamSize among selected events (most restrictive)
+    const maxTeamSize = Math.min(...allTeamEvents.map(event => event.maxTeamSize!));
+    
+    return { requiresTeam: true, maxTeamSize };
+  };
+
+  const teamRequirements = getTeamRequirements();
 
   useEffect(() => {
-    setFormData(prev => ({ ...prev, isTeamEvent: requiresTeam }));
-  }, [requiresTeam]);
+    setFormData(prev => ({ 
+      ...prev, 
+      isTeamEvent: teamRequirements.requiresTeam,
+      // Adjust team size if it exceeds the new limit
+      teamSize: teamRequirements.requiresTeam 
+        ? Math.min(prev.teamSize || 1, teamRequirements.maxTeamSize)
+        : 1,
+      // Remove excess team members if team size is reduced
+      teamMembers: teamRequirements.requiresTeam && prev.teamMembers
+        ? prev.teamMembers.slice(0, Math.max(0, teamRequirements.maxTeamSize - 1))
+        : []
+    }));
+  }, [teamRequirements.requiresTeam, teamRequirements.maxTeamSize]);
 
   const handleInputChange = (field: keyof RegistrationFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -98,25 +146,37 @@ export default function RegistrationForm() {
   const handleEventSelection = (eventId: number, type: "event" | "workshop" | "non-tech") => {
     setFormData(prev => {
       if (type === "event") {
+        const event = techEvents.find(e => e.id === eventId);
+        if (!event) return prev;
+        
+        const isSelected = prev.selectedEvents.some(item => item.id === eventId);
         return {
           ...prev,
-          selectedEvents: prev.selectedEvents.includes(eventId)
-            ? prev.selectedEvents.filter(id => id !== eventId)
-            : [...prev.selectedEvents, eventId]
+          selectedEvents: isSelected
+            ? prev.selectedEvents.filter(item => item.id !== eventId)
+            : [...prev.selectedEvents, { id: event.id, title: event.title }]
         };
       } else if (type === "workshop") {
+        const workshop = workshops.find(w => w.id === eventId);
+        if (!workshop) return prev;
+        
+        const isSelected = prev.selectedWorkshops.some(item => item.id === eventId);
         return {
           ...prev,
-          selectedWorkshops: prev.selectedWorkshops.includes(eventId)
-            ? prev.selectedWorkshops.filter(id => id !== eventId)
-            : [...prev.selectedWorkshops, eventId]
+          selectedWorkshops: isSelected
+            ? prev.selectedWorkshops.filter(item => item.id !== eventId)
+            : [...prev.selectedWorkshops, { id: workshop.id, title: workshop.title }]
         };
       } else {
+        const event = nonTechEvents.find(e => e.id === eventId);
+        if (!event) return prev;
+        
+        const isSelected = prev.selectedNonTechEvents.some(item => item.id === eventId);
         return {
           ...prev,
-          selectedNonTechEvents: prev.selectedNonTechEvents.includes(eventId)
-            ? prev.selectedNonTechEvents.filter(id => id !== eventId)
-            : [...prev.selectedNonTechEvents, eventId]
+          selectedNonTechEvents: isSelected
+            ? prev.selectedNonTechEvents.filter(item => item.id !== eventId)
+            : [...prev.selectedNonTechEvents, { id: event.id, title: event.title }]
         };
       }
     });
@@ -132,6 +192,14 @@ export default function RegistrationForm() {
   };
 
   const addTeamMember = () => {
+    const currentTeamSize = formData.teamSize || 1;
+    const maxAllowedSize = teamRequirements.maxTeamSize;
+    
+    if (currentTeamSize >= maxAllowedSize) {
+      toast.error(`Maximum team size for selected events is ${maxAllowedSize} members.`, { duration: 4000 });
+      return;
+    }
+    
     const newMember: TeamMember = { name: "", department: "", year: "", email: "", whatsapp: "" };
     setFormData(prev => ({
       ...prev,
@@ -164,17 +232,15 @@ export default function RegistrationForm() {
     else if (!validatePhone(formData.whatsapp)) newErrors.whatsapp = "Invalid phone number format";
     if (!formData.college.trim()) newErrors.college = "College name is required";
     if (!formData.year) newErrors.year = "Year of study is required";
-    
-    // Event selection validation
-/*     
-    const totalSelections = formData.selectedEvents.length + formData.selectedWorkshops.length + formData.selectedNonTechEvents.length;
-    if (totalSelections === 0) {
-      newErrors.events = "Please select at least one event or workshop";
-    }
-*/ 
       
     // Team member validation
     if (formData.isTeamEvent && formData.teamMembers) {
+      // Check team size limit
+      const currentTeamSize = formData.teamSize || 1;
+      if (currentTeamSize > teamRequirements.maxTeamSize) {
+        newErrors.teamSize = `Team size cannot exceed ${teamRequirements.maxTeamSize} members for selected events`;
+      }
+      
       formData.teamMembers.forEach((member, index) => {
         if (!member.name.trim()) newErrors[`team_${index}_name`] = `Team member ${index + 2} name is required`;
         if (!member.email.trim()) newErrors[`team_${index}_email`] = `Team member ${index + 2} email is required`;
@@ -214,26 +280,118 @@ export default function RegistrationForm() {
     setIsSubmitting(true);
     
     try {
-      // Here you would implement the actual submission logic
-      // For now, just simulate a submission
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const eventCount = formData.selectedEvents.length + formData.selectedWorkshops.length + formData.selectedNonTechEvents.length;
-      const paymentTotal = getRequiredQRs().reduce((total, qr) => total + (qr.amount === "Free" ? 0 : parseInt(qr.amount.replace('₹', ''))), 0);
-      
-      toast.success(
-        `Registration submitted successfully! ✓ Events registered: ${eventCount} | ₹ Total payment: ₹${paymentTotal} | ✉ Confirmation email will be sent to: ${formData.email}. Please keep your transaction receipts safe for verification.`,
-        { duration: 6000 }
+      // Check for duplicates first
+      setIsCheckingDuplicates(true);
+      const duplicateCheck = await checkDuplicateRegistration(
+        formData.email,
+        formData.whatsapp,
       );
       
-      // Reset form or redirect
-      // window.location.href = "/";
+      setIsCheckingDuplicates(false);
+      
+      if (duplicateCheck.exists) {
+        toast.error(
+          `Registration already exists with the same ${duplicateCheck.duplicateFields.join(', ')}. Please use different details or contact support.`,
+          { duration: 6000 }
+        );
+        return;
+      }
+      
+      // Submit registration to Firebase
+      const result = await submitRegistration(formData);
+      
+      if (result.success) {
+        const eventCount = formData.selectedEvents.length + formData.selectedWorkshops.length + formData.selectedNonTechEvents.length;
+        const paymentTotal = getRequiredQRs().reduce((total, qr) => total + (qr.amount === "Free" ? 0 : parseInt(qr.amount.replace('₹', ''))), 0);
+        
+        // Store success data for download functionality
+        setSuccessData({
+          registrationId: result.registrationId,
+          formData: { ...formData },
+          submissionDate: new Date().toLocaleString()
+        });
+        
+        toast.success(
+          `${result.message} Events registered: ${eventCount} | ₹ Total payment: ₹${paymentTotal} | Confirmation email will be sent to: ${formData.email}. Please keep your transaction receipts safe for verification.`,
+          { duration: 8000 }
+        );
+        
+        // Don't reset form immediately, wait for user to download if they want
+        // We'll reset it when they click a "Start New Registration" button
+        
+      } else {
+        toast.error(result.message, { duration: 6000 });
+      }
       
     } catch (error) {
+      console.error('Registration submission error:', error);
       toast.error("Registration failed. Please try again or contact support.");
     } finally {
       setIsSubmitting(false);
+      setIsCheckingDuplicates(false);
     }
+  };
+
+  // Download functions
+  const handleDownloadPDF = () => {
+    if (!successData) return;
+    
+    const downloadData: RegistrationDownloadData = {
+      ...successData.formData,
+      registrationId: successData.registrationId,
+      submissionDate: successData.submissionDate
+    };
+    
+    downloadRegistrationPDF(downloadData);
+    toast.success("Registration PDF downloaded successfully!", { duration: 3000 });
+  };
+
+  const handleDownloadText = () => {
+    if (!successData) return;
+    
+    const downloadData: RegistrationDownloadData = {
+      ...successData.formData,
+      registrationId: successData.registrationId,
+      submissionDate: successData.submissionDate
+    };
+    
+    downloadRegistrationText(downloadData);
+    toast.success("Registration text file downloaded successfully!", { duration: 3000 });
+  };
+
+  const handleDownloadJSON = () => {
+    if (!successData) return;
+    
+    const downloadData: RegistrationDownloadData = {
+      ...successData.formData,
+      registrationId: successData.registrationId,
+      submissionDate: successData.submissionDate
+    };
+    
+    downloadRegistrationJSON(downloadData);
+    toast.success("Registration JSON file downloaded successfully!", { duration: 3000 });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      department: "",
+      email: "",
+      whatsapp: "",
+      college: "",
+      year: "",
+      isTeamEvent: false,
+      teamSize: 1,
+      teamMembers: [],
+      selectedEvents: [],
+      selectedWorkshops: [],
+      selectedNonTechEvents: [],
+      transactionIds: {},
+      hasConsented: false,
+    });
+    setErrors({});
+    setSuccessData(null);
+    toast.success("Form reset! You can now submit a new registration.", { duration: 3000 });
   };
 
   return (
@@ -385,12 +543,19 @@ export default function RegistrationForm() {
                     <label key={event.id} className="group relative flex items-start space-x-3 p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 hover:bg-white/15 cursor-pointer transition-all duration-300 hover:scale-[1.02] w-full overflow-hidden">
                       <input
                         type="checkbox"
-                        checked={formData.selectedEvents.includes(event.id)}
+                        checked={formData.selectedEvents.some(item => item.id === event.id)}
                         onChange={() => handleEventSelection(event.id, "event")}
                         className="w-5 h-5 text-blue-600 bg-white/10 border-white/30 rounded focus:ring-blue-500 flex-shrink-0 mt-1"
                       />
                       <div className="flex-1 min-w-0">
-                        <span className="text-white font-medium group-hover:text-blue-300 transition-colors block break-words">{event.title}</span>
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="text-white font-medium group-hover:text-blue-300 transition-colors break-words">{event.title}</span>
+                          {event.maxTeamSize && (
+                            <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded whitespace-nowrap">
+                              Team: max {event.maxTeamSize}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-gray-400 text-sm flex flex-wrap items-center gap-1 mt-1">
                           <MapPin className="w-3 h-3 flex-shrink-0" />
                           <span className="break-words">{event.venue}</span>
@@ -412,7 +577,7 @@ export default function RegistrationForm() {
                     <label key={workshop.id} className="group relative flex items-start space-x-3 p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 hover:bg-white/15 cursor-pointer transition-all duration-300 hover:scale-[1.02] w-full overflow-hidden">
                       <input
                         type="checkbox"
-                        checked={formData.selectedWorkshops.includes(workshop.id)}
+                        checked={formData.selectedWorkshops.some(item => item.id === workshop.id)}
                         onChange={() => handleEventSelection(workshop.id, "workshop")}
                         className="w-5 h-5 text-green-600 bg-white/10 border-white/30 rounded focus:ring-green-500 flex-shrink-0 mt-1"
                       />
@@ -439,7 +604,7 @@ export default function RegistrationForm() {
                     <label key={event.id} className="group relative flex items-start space-x-3 p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 hover:bg-white/15 cursor-pointer transition-all duration-300 hover:scale-[1.02] w-full overflow-hidden">
                       <input
                         type="checkbox"
-                        checked={formData.selectedNonTechEvents.includes(event.id)}
+                        checked={formData.selectedNonTechEvents.some(item => item.id === event.id)}
                         onChange={() => handleEventSelection(event.id, "non-tech")}
                         className="w-5 h-5 text-purple-600 bg-white/10 border-white/30 rounded focus:ring-purple-500 flex-shrink-0 mt-1"
                       />
@@ -461,8 +626,19 @@ export default function RegistrationForm() {
 
             {/* Team Details */}
             {formData.isTeamEvent && (
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/20 w-full overflow-hidden hover:bg-white/15 transition-all duration-300">
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Team Details</h3>
+              <div className="bg-black/60 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/20 w-full overflow-hidden transition-all duration-300">
+                <div className="flex flex-wrap items-center justify-between mb-4 sm:mb-6">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white">Team Details</h3>
+                  <div className="text-sm bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full">
+                    Max team size: {teamRequirements.maxTeamSize} members
+                  </div>
+                </div>
+                <div className="mb-4 p-3 bg-blue-500/10 border border-blue-400/30 rounded-lg">
+                  <p className="text-blue-300 text-sm">
+                    <strong>Team Required:</strong> The selected events require team participation. 
+                    Please add your team members below (including yourself, max {teamRequirements.maxTeamSize} total).
+                  </p>
+                </div>
                 <div className="space-y-4">
                   {(formData.teamMembers || []).map((member, index) => (
                     <div key={index} className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 w-full overflow-hidden">
@@ -512,9 +688,17 @@ export default function RegistrationForm() {
                   <button
                     type="button"
                     onClick={addTeamMember}
-                    className="w-full py-3 bg-white/10 backdrop-blur-sm border border-blue-400/50 rounded-lg text-blue-400 hover:bg-white/15 hover:border-blue-400 transition-all duration-300"
+                    disabled={(formData.teamSize || 1) >= teamRequirements.maxTeamSize}
+                    className={`w-full py-3 backdrop-blur-sm border rounded-lg transition-all duration-300 ${
+                      (formData.teamSize || 1) >= teamRequirements.maxTeamSize
+                        ? 'bg-gray-600/20 border-gray-500/50 text-gray-400 cursor-not-allowed'
+                        : 'bg-white/10 border-blue-400/50 text-blue-400 hover:bg-white/15 hover:border-blue-400'
+                    }`}
                   >
-                    + Add Team Member
+                    {(formData.teamSize || 1) >= teamRequirements.maxTeamSize 
+                      ? `Team limit reached (${teamRequirements.maxTeamSize} max)`
+                      : '+ Add Team Member'
+                    }
                   </button>
                 </div>
               </div>
@@ -536,10 +720,10 @@ export default function RegistrationForm() {
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-blue-400/30 hover:bg-white/15 transition-all duration-300">
                       <h4 className="font-semibold text-blue-400 mb-3">Technical Events ({formData.selectedEvents.length})</h4>
                       <ul className="space-y-2">
-                        {formData.selectedEvents.map(eventId => {
-                          const event = techEvents.find(e => e.id === eventId);
+                        {formData.selectedEvents.map(selectedEvent => {
+                          const event = techEvents.find(e => e.id === selectedEvent.id);
                           return event ? (
-                            <li key={eventId} className="text-sm text-white break-words">• {event.title} <span className="text-green-300">({event.price})</span></li>
+                            <li key={selectedEvent.id} className="text-sm text-white break-words">• {selectedEvent.title} <span className="text-green-300">({event.price})</span></li>
                           ) : null;
                         })}
                       </ul>
@@ -551,11 +735,11 @@ export default function RegistrationForm() {
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-green-400/30 hover:bg-white/15 transition-all duration-300">
                       <h4 className="font-semibold text-green-400 mb-3">Workshops ({formData.selectedWorkshops.length})</h4>
                       <ul className="space-y-2">
-                        {formData.selectedWorkshops.map(workshopId => {
-                          const workshop = workshops.find(w => w.id === workshopId);
+                        {formData.selectedWorkshops.map(selectedWorkshop => {
+                          const workshop = workshops.find(w => w.id === selectedWorkshop.id);
                           return workshop ? (
-                            <li key={workshopId} className="text-sm text-white break-words">
-                              • {workshop.title} <span className="text-green-300">({workshop.price})</span>
+                            <li key={selectedWorkshop.id} className="text-sm text-white break-words">
+                              • {selectedWorkshop.title} <span className="text-green-300">({workshop.price})</span>
                             </li>
                           ) : null;
                         })}
@@ -568,10 +752,10 @@ export default function RegistrationForm() {
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-purple-400/30 hover:bg-white/15 transition-all duration-300">
                       <h4 className="font-semibold text-purple-400 mb-3">Non-Tech Events ({formData.selectedNonTechEvents.length})</h4>
                       <ul className="space-y-2">
-                        {formData.selectedNonTechEvents.map(eventId => {
-                          const event = nonTechEvents.find(e => e.id === eventId);
+                        {formData.selectedNonTechEvents.map(selectedEvent => {
+                          const event = nonTechEvents.find(e => e.id === selectedEvent.id);
                           return event ? (
-                            <li key={eventId} className="text-sm text-white break-words">• {event.title}</li>
+                            <li key={selectedEvent.id} className="text-sm text-white break-words">• {selectedEvent.title}</li>
                           ) : null;
                         })}
                       </ul>
@@ -710,16 +894,29 @@ export default function RegistrationForm() {
             <div className="text-center w-full">
               <button
                 type="submit"
-                disabled={!formData.hasConsented || isSubmitting}
+                disabled={!formData.hasConsented || isSubmitting || isCheckingDuplicates || successData !== null}
                 className="w-full max-w-md mx-auto py-4 px-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-lg rounded-xl hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
               >
-                {isSubmitting ? (
+                {isCheckingDuplicates ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Checking for duplicates...
+                  </>
+                ) : isSubmitting ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     Submitting Registration...
+                  </>
+                ) : successData ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Registration Submitted Successfully!
                   </>
                 ) : (
                   <>
@@ -731,6 +928,74 @@ export default function RegistrationForm() {
                 )}
               </button>
             </div>
+
+            {/* Download Section - Show after successful registration */}
+            {successData && (
+              <div className="bg-black/60 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-green-400/50 w-full overflow-hidden transition-all duration-300">
+                <h3 className="text-xl sm:text-2xl font-bold text-green-400 mb-4 flex items-center">
+                  <CheckCircle className="w-6 h-6 mr-3" />
+                  Registration Successful!
+                </h3>
+                
+                <div className="text-center mb-6">
+                  <p className="text-white text-lg mb-2">
+                    <span className="font-semibold">Registration ID:</span> 
+                    <span className="text-green-400 font-mono text-xl ml-2">{successData.registrationId}</span>
+                  </p>
+                  <p className="text-gray-300 text-sm">
+                    Submitted on: {successData.submissionDate}
+                  </p>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
+                  <h4 className="text-white font-semibold mb-3 text-center">Download Your Registration Details</h4>
+                  <p className="text-gray-300 text-sm text-center mb-4">
+                    Save your registration information for your records. Choose your preferred format:
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      onClick={handleDownloadPDF}
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 transform hover:scale-[1.02]"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      PDF Document
+                    </button>
+                    
+                    <button
+                      onClick={handleDownloadText}
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 transform hover:scale-[1.02]"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Text File
+                    </button>
+                    
+                    <button
+                      onClick={handleDownloadJSON}
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 transform hover:scale-[1.02]"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      JSON Data
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <button
+                    onClick={resetForm}
+                    className="py-3 px-6 bg-white/10 backdrop-blur-sm border border-white/30 text-white rounded-lg hover:bg-white/15 hover:border-white/50 transition-all duration-300"
+                  >
+                    Start New Registration
+                  </button>
+                </div>
+              </div>
+            )}
           </form>
         </div>
         </div>

@@ -50,6 +50,7 @@ export const events: Event[] = [
     tags: ["Problem Solving", "Security", "Puzzles"],
     image: "/images/escape-room.jpg",
     price: "₹69",
+    maxTeamSize: 2,
   },
   {
     id: 4,
@@ -82,6 +83,7 @@ export const events: Event[] = [
     tags: ["Presentation", "Innovation", "Problem Solving"],
     image: "/images/project-presentation.jpg",
     price: "₹69",
+    maxTeamSize: 2,
   },
   {
     id: 6,
@@ -98,6 +100,7 @@ export const events: Event[] = [
     tags: ["CTF", "Cryptography", "Web Security", "Competition"],
     image: "/images/ctf.jpg",
     price: "₹69",
+    maxTeamSize: 2,
   },
   // Non-Technical Events
   {

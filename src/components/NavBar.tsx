@@ -96,7 +96,7 @@ export default function NavBar() {
             {/* Asymmetric Logo */}
             <div className="flex-shrink-0 relative top-1 sm:top-0.5">
               <a
-                href="https://asymmetric.in/"
+                href="https://asymmetric-livid.vercel.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 hover:scale-x-110 transition-transform duration-200"
