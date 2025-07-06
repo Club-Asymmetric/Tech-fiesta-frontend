@@ -13,7 +13,8 @@ export interface Event {
   registrations?: number;
   tags?: string[];
   image?: string;
-  price?: string; // Optional field for event price
+  price?: string; // Regular price
+  citPrice?: string; // CIT student price
   maxTeamSize?: number; // Maximum team size for events that allow teams
 }
 
@@ -32,7 +33,8 @@ export interface Workshop {
   materials?: string[];
   capacity?: number;
   registrations?: number;
-  price: string;
+  price: string; // Regular price
+  citPrice?: string; // CIT student price
   tags?: string[];
   syllabus?: string[];
 }
