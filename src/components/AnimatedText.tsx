@@ -357,7 +357,7 @@ const AnimatedText = ({
               className={`transition-all duration-300 ease-out`}
               style={{ marginBottom: "1rem" }}
             >
-              <h1 className="asymmetric-text text-4xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-wider text-white text-glow font-sans">
+              <h1 className="asymmetric-text text-4xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-wider text-gray-50 text-glow font-sans">
                 {"Asymmetric".split("").map((char, index) => (
                   <span
                     key={`asymmetric-${index}`}
@@ -383,7 +383,7 @@ const AnimatedText = ({
                 perspective: "1000px",
               }}
             >
-              <h1 className="tech-fiesta-text relative text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-white text-glow font-sans">
+              <h1 className="tech-fiesta-text relative text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-wider text-gray-200 text-glow font-sans">
                 {" "}
                 {text.split("").map((char, index) => {
                   return (
@@ -410,7 +410,7 @@ const AnimatedText = ({
         </div>
         {/* Step 4: Coming Soon Text - appears from bottom */}
         <div
-          className={`absolute bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 left-0 right-0 flex items-center justify-center transition-all duration-500 ease-out ${
+          className={`absolute bottom-20 left-0 right-0 flex items-center justify-center transition-all duration-500 ease-out ${
             step >= 4 ? "opacity-100" : "opacity-0"
           }`}
           style={{
@@ -418,7 +418,7 @@ const AnimatedText = ({
           }}
         >
           <div className="text-center px-4">
-            <h2 className="coming-soon-text text-base sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-wider text-white text-glow font-sans">
+            <h2 className="coming-soon-text text-base sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-wider text-gray-200 text-glow font-sans">
               {"Coming Soon".split("").map((char, index) => (
                 <span
                   key={`coming-soon-${index}`}

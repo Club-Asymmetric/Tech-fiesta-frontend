@@ -1,5 +1,7 @@
 import React from "react";
 import { Event } from "@/types";
+import { generateRegistrationUrl } from "@/utils/registration";
+import SpotlightCard from "./ReactBits/SpotlightCard/SpotlightCard";
 
 interface EventCardProps {
   event: Event;
@@ -16,9 +18,21 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  const handleRegisterClick = () => {
+    const eventType = event.type === "tech" ? "event" : "non-tech";
+    const registrationUrl = generateRegistrationUrl(event.id, eventType);
+    window.location.href = registrationUrl;
+  };
+
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
-      {" "}
+    <SpotlightCard 
+      className="bg-white/10 backdrop-blur-md rounded-lg border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105"
+      spotlightColor={
+        event.type === "tech" 
+          ? "rgba(59, 130, 246, 0.4)" // Blue spotlight for tech events
+          : "rgba(34, 197, 94, 0.4)"  // Green spotlight for non-tech events
+      }
+    >
       {/* Event Type Badge */}
       <div className="flex justify-start items-start mb-4">
         <span
@@ -117,11 +131,14 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       )}{" "}
       {/* Registration Info */}
       <div className="flex justify-end pt-4 border-t border-white/10">
-        <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105">
+        <button 
+          onClick={handleRegisterClick}
+          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+        >
           Register Now
         </button>
       </div>
-    </div>
+    </SpotlightCard>
   );
 };
 

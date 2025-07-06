@@ -102,7 +102,7 @@ const WorkshopGrid: React.FC<WorkshopGridProps> = ({
         </div>
       )}{" "}
       {/* Quick Stats */}
-      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {/* <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10 text-center">
           <div className="text-2xl font-bold text-white mb-2">
             {workshops.length}
@@ -115,7 +115,7 @@ const WorkshopGrid: React.FC<WorkshopGridProps> = ({
           </div>
           <div className="text-gray-300 text-sm">Categories</div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

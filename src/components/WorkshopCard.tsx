@@ -1,5 +1,7 @@
 import React from "react";
 import { Workshop } from "@/types";
+import { generateRegistrationUrl } from "@/utils/registration";
+import SpotlightCard from "./ReactBits/SpotlightCard/SpotlightCard";
 
 interface WorkshopCardProps {
   workshop: Workshop;
@@ -16,8 +18,16 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  const handleEnrollClick = () => {
+    const registrationUrl = generateRegistrationUrl(workshop.id, "workshop");
+    window.location.href = registrationUrl;
+  };
+
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
+    <SpotlightCard 
+      className="bg-white/10 backdrop-blur-md rounded-lg border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105"
+      spotlightColor="rgba(147, 51, 234, 0.4)"
+    >
       {/* Header with Price */}
       <div className="flex justify-end items-start mb-4">
         <div className="text-right">
@@ -134,12 +144,15 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
       {/* Registration Section */}
       <div className="pt-4 border-t border-white/10">
         <div className="flex justify-end">
-          <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105">
+          <button 
+            onClick={handleEnrollClick}
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+          >
             Enroll Now
           </button>
         </div>
       </div>
-    </div>
+    </SpotlightCard>
   );
 };
 
