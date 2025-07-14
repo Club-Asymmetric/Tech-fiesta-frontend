@@ -30,13 +30,13 @@ import {
   LogOut,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
-import ClockCollection from "./ClockCollection";
 import {
   downloadRegistrationPDF,
   downloadRegistrationText,
   downloadRegistrationJSON,
   RegistrationDownloadData,
 } from "@/utils/downloadUtils";
+import MinimalClockCollection from "./MinimalClock";
 
 export default function RegistrationForm() {
   const { user, isCit, signOut, getAuthToken } = useAuth();
@@ -582,7 +582,7 @@ export default function RegistrationForm() {
     <>
       {/* Add the same fixed clock background as other pages */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <ClockCollection mainClockSize={420} smallClockCount={60} />
+          <MinimalClockCollection mainClockSize={420} smallClockCount={5} />
         <div className="absolute inset-0 bg-black/60"></div>{" "}
         {/* Overlay for better readability */}
       </div>

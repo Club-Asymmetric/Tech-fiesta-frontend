@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import ClockCollection from "@/components/ClockCollection";
+import MinimalClockCollection from "@/components/MinimalClock";
 
 export default function LoginPage() {
   const { user, loading, signInWithGoogle, isCit } = useAuth();
@@ -36,7 +36,7 @@ export default function LoginPage() {
     <>
       {/* Clock background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <ClockCollection mainClockSize={420} smallClockCount={60} />
+          <MinimalClockCollection mainClockSize={420} smallClockCount={5} />
         <div className="absolute inset-0 bg-black/60"></div>
       </div>
 
