@@ -590,13 +590,13 @@ export default function RegistrationForm() {
       <div className="relative z-10 min-h-screen py-6 sm:py-12 px-4 overflow-x-hidden">
         <div className="max-w-5xl mx-auto w-full">
           <div className="text-center mb-8 sm:mb-12">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col mb-4 gap-4">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent leading-tight">
                 Tech Fiesta 2025 Registration
               </h1>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="text-white text-sm">
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-center sm:text-right">
+                  <p className="text-white text-xs sm:text-sm">
                     Welcome, {user?.displayName || user?.email}
                   </p>
                   {isCit && (
@@ -607,10 +607,11 @@ export default function RegistrationForm() {
                 </div>
                 <button
                   onClick={signOut}
-                  className="flex items-center gap-2 px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors text-sm whitespace-nowrap"
                 >
-                  <LogOut size={16} />
-                  Sign Out
+                  <LogOut size={14} className="sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Sign Out</span>
+                  <span className="sm:hidden">Out</span>
                 </button>
               </div>
             </div>
@@ -1582,7 +1583,7 @@ export default function RegistrationForm() {
         <div className="fixed bottom-6 right-6 z-50">
           <button
             onClick={() => setShowQuickContact(!showQuickContact)}
-            className="bg-green-600/80 backdrop-blur-sm hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 border border-green-500/50"
+            className="bg-blue-600/80 backdrop-blur-sm hover:bg-blue-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 border border-blue-500/50"
           >
             <svg
               className="w-6 h-6"
@@ -1607,25 +1608,25 @@ export default function RegistrationForm() {
               </p>
               <div className="space-y-2">
                 <a
-                  href="tel:+1234567890"
+                  href="tel:+8438190166"
                   className="flex items-center text-blue-400 hover:text-blue-300 transition-colors break-words"
                 >
                   <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
-                  +91 12345 67890
+                  +91 8438190166
                 </a>
                 <a
-                  href="https://wa.me/1234567890"
+                  href="https://wa.me/8438190166"
                   className="flex items-center text-green-400 hover:text-green-300 transition-colors break-words"
                 >
                   <FaWhatsapp className="w-4 h-4 mr-2 flex-shrink-0" />
                   WhatsApp Support
                 </a>
                 <a
-                  href="mailto:support@asymmetric.in"
+                  href="mailto:asymmetric@citchennai.net"
                   className="flex items-center text-purple-400 hover:text-purple-300 transition-colors break-words"
                 >
                   <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
-                  support@asymmetric.in
+                  Asymmetric@citchennai.net
                 </a>
               </div>
             </div>
