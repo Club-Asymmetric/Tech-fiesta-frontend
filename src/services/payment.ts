@@ -69,6 +69,7 @@ export const paymentApi = {
               (registrationData.selectedWorkshops?.length || 0) +
               (registrationData.selectedNonTechEvents?.length || 0),
           },
+          registrationData, // Store full registration data for webhook processing
         }),
       }
     );
@@ -94,6 +95,41 @@ export const paymentApi = {
       }
     );
     return response;
+  },
+
+  // Check if payment was processed by webhook
+  checkWebhookStatus: async (orderId: string, token: string) => {
+    const response = await authenticatedApiRequest(
+      `/payment/status/${orderId}`,
+      token
+    );
+    return response;
+  },
+
+  // Poll for webhook completion
+  pollPaymentStatus: async (orderId: string, token: string, maxAttempts: number = 10): Promise<any> => {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await authenticatedApiRequest(
+          `/payment/status/${orderId}`,
+          token
+        );
+        
+        if (response.data.status === 'completed' && response.data.registrationId) {
+          return response;
+        }
+        
+        // Wait 2 seconds before next attempt
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error(`Polling attempt ${attempt} failed:`, error);
+        if (attempt === maxAttempts) {
+          throw error;
+        }
+      }
+    }
+    
+    throw new Error('Payment status polling timeout');
   },
 
   getPaymentStatus: async (orderId: string, token: string) => {
