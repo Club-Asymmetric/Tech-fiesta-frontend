@@ -11,6 +11,7 @@ import {
   PaymentQR,
 } from "@/types";
 import { eventsApi, workshopsApi, registrationApi } from "@/services/api";
+import { paymentApi, loadRazorpayScript, PaymentOrder, PaymentResponse } from "@/services/payment";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   validateEmail,
@@ -76,6 +77,8 @@ export default function RegistrationForm() {
     formData: RegistrationFormData;
     submissionDate: string;
   } | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
   // Load events and workshops from API
   useEffect(() => {
@@ -96,6 +99,18 @@ export default function RegistrationForm() {
     };
 
     loadData();
+  }, []);
+
+  // Load Razorpay script
+  useEffect(() => {
+    const loadScript = async () => {
+      const loaded = await loadRazorpayScript();
+      setRazorpayLoaded(loaded);
+      if (!loaded) {
+        console.error("Failed to load Razorpay script");
+      }
+    };
+    loadScript();
   }, []);
 
   // Update form data when events/workshops load and there's a preselected item
@@ -440,6 +455,11 @@ export default function RegistrationForm() {
       return;
     }
 
+    if (!razorpayLoaded) {
+      toast.error("Payment system is loading. Please try again in a moment.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -447,6 +467,7 @@ export default function RegistrationForm() {
       const token = await getAuthToken();
       if (!token) {
         toast.error("Authentication required. Please sign in again.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -467,42 +488,101 @@ export default function RegistrationForm() {
           )}. Please use different details or contact support.`,
           { duration: 6000 }
         );
+        setIsSubmitting(false);
         return;
       }
 
-      // Submit registration to backend
-      const result = await registrationApi.submit(formData, token);
+      // For now, using ₹1 as registration fee
+      const registrationFee = 1;
 
-      if (result.success) {
-        const eventCount =
-          formData.selectedEvents.length +
-          formData.selectedWorkshops.length +
-          formData.selectedNonTechEvents.length;
-        const paymentTotal = getRequiredQRs().reduce(
-          (total, qr) =>
-            total +
-            (qr.amount === "Free" ? 0 : parseInt(qr.amount.replace("₹", ""))),
-          0
-        );
+      setPaymentLoading(true);
+      
+      // Create payment order
+      const orderResponse = await paymentApi.createOrder(
+        registrationFee,
+        token,
+        formData
+      );
 
-        // Store success data for download functionality
-        setSuccessData({
-          registrationId: result.data.registrationId,
-          formData: { ...formData },
-          submissionDate: new Date().toLocaleString(),
-        });
-
-        toast.success(
-          `${result.message} Events registered: ${eventCount} | Total payment: ₹${paymentTotal} | Confirmation email will be sent to: ${formData.email}. Please keep your transaction receipts safe for verification.`,
-          { duration: 8000 }
-        );
-      } else {
-        toast.error(result.message, { duration: 6000 });
+      if (!orderResponse.success || !orderResponse.data) {
+        toast.error("Failed to create payment order");
+        setPaymentLoading(false);
+        setIsSubmitting(false);
+        return;
       }
+
+      const order: PaymentOrder = orderResponse.data;
+
+      // Razorpay options
+      const options = {
+        key: order.key,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Tech Fiesta 2025",
+        description: "Registration Fee",
+        order_id: order.orderId,
+        handler: async (response: PaymentResponse) => {
+          try {
+            // Verify payment
+            const verifyResponse = await paymentApi.verifyPayment(
+              response,
+              token,
+              formData
+            );
+
+            if (verifyResponse.success) {
+              setSuccessData({
+                registrationId: verifyResponse.data.registrationId,
+                formData: { ...formData },
+                submissionDate: new Date().toLocaleString(),
+              });
+              
+              const eventCount =
+                formData.selectedEvents.length +
+                formData.selectedWorkshops.length +
+                formData.selectedNonTechEvents.length;
+
+              toast.success(
+                `Payment successful! Registration completed. Registration ID: ${verifyResponse.data.registrationId}. Events registered: ${eventCount}`,
+                { duration: 8000 }
+              );
+            } else {
+              toast.error(verifyResponse.message || "Payment verification failed");
+            }
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            toast.error("Payment verification failed. Please contact support with your payment details.");
+          } finally {
+            setPaymentLoading(false);
+            setIsSubmitting(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            toast.error("Payment cancelled");
+            setPaymentLoading(false);
+            setIsSubmitting(false);
+          },
+        },
+        prefill: {
+          name: formData.name,
+          email: formData.email,
+          contact: formData.whatsapp,
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      // Open Razorpay checkout
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+      setPaymentLoading(false);
+
     } catch (error) {
       console.error("Registration submission error:", error);
       toast.error("Registration failed. Please try again or contact support.");
-    } finally {
+      setPaymentLoading(false);
       setIsSubmitting(false);
       setIsCheckingDuplicates(false);
     }
@@ -1391,6 +1471,7 @@ export default function RegistrationForm() {
                     !formData.hasConsented ||
                     isSubmitting ||
                     isCheckingDuplicates ||
+                    paymentLoading ||
                     successData !== null
                   }
                   className="w-full max-w-md mx-auto py-4 px-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-lg rounded-xl hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
@@ -1443,10 +1524,34 @@ export default function RegistrationForm() {
                       </svg>
                       Submitting Registration...
                     </>
+                  ) : paymentLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing Payment...
+                    </>
                   ) : successData ? (
                     <>
                       <CheckCircle className="w-5 h-5 mr-2" />
-                      Registration Submitted Successfully!
+                      Registration Completed Successfully!
                     </>
                   ) : (
                     <>
@@ -1463,7 +1568,7 @@ export default function RegistrationForm() {
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Submit Registration
+                      Pay ₹1 & Complete Registration
                     </>
                   )}
                 </button>
