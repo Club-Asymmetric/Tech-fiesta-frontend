@@ -7,7 +7,7 @@ export const events: Event[] = [
     id: 1,
     title: "Try, If you can..?",
     type: "tech" as const,
-    date: "2025-03-15",
+    date: "2025-07-30",
     time: "10:00 AM - 6:00 PM",
     venue: "Security Lab",
     description:
@@ -17,13 +17,14 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["Security", "VM", "Reverse Engineering", "Signature Event"],
     image: "/images/try-if-you-can.jpg",
-    price: "₹69",
+    price: "₹99",
+    citPrice: "₹59",
   },
   {
     id: 2,
     title: "Reverse Code",
     type: "tech" as const,
-    date: "2025-03-16",
+    date: "2025-07-30",
     time: "2:00 PM - 4:00 PM",
     venue: "Programming Lab",
     description:
@@ -33,13 +34,14 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["Programming", "Logic", "Creative Coding"],
     image: "/images/reverse-code.jpg",
-    price: "₹69",
+    price: "₹99",
+    citPrice: "₹59",
   },
   {
     id: 3,
     title: "Escape Room",
     type: "tech" as const,
-    date: "2025-03-17",
+    date: "2025-07-30",
     time: "11:00 AM - 5:00 PM",
     venue: "Interactive Lab",
     description:
@@ -49,14 +51,15 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["Problem Solving", "Security", "Puzzles"],
     image: "/images/escape-room.jpg",
-    price: "₹69",
+    price: "₹99",
+    citPrice: "₹59",
     maxTeamSize: 2,
   },
   {
     id: 4,
     title: "Prompt Engineering",
     type: "tech" as const,
-    date: "2025-03-18",
+    date: "2025-07-30",
     time: "9:00 AM - 3:00 PM",
     venue: "AI Lab",
     description:
@@ -66,13 +69,14 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["AI", "Prompt Engineering", "Creative AI"],
     image: "/images/prompt-engineering.jpg",
-    price: "₹69",
+    price: "₹99",
+    citPrice: "₹59",
   },
   {
     id: 5,
     title: "Project Presentation",
     type: "tech" as const,
-    date: "2025-03-19",
+    date: "2025-07-30",
     time: "10:00 AM - 4:00 PM",
     venue: "Main Auditorium",
     description:
@@ -82,14 +86,15 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["Presentation", "Innovation", "Problem Solving"],
     image: "/images/project-presentation.jpg",
-    price: "₹69",
+    price: "₹99",
+    citPrice: "₹59",
     maxTeamSize: 2,
   },
   {
     id: 6,
     title: "Capture The Flag (CTF)",
     type: "tech" as const,
-    date: "2025-03-20",
+    date: "2025-07-30",
     time: "1:00 PM - 7:00 PM",
     venue: "CTF Arena",
     description:
@@ -99,7 +104,8 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["CTF", "Cryptography", "Web Security", "Competition"],
     image: "/images/ctf.jpg",
-    price: "₹69",
+    price: "₹99",
+    citPrice: "₹59",
     maxTeamSize: 2,
   },
   // Non-Technical Events
@@ -107,7 +113,7 @@ export const events: Event[] = [
     id: 7,
     title: "Channel Surfing",
     type: "non-tech" as const,
-    date: "2025-03-21",
+    date: "2025-07-30",
     time: "3:00 PM - 5:00 PM",
     venue: "Entertainment Hall",
     description:
@@ -117,13 +123,13 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["Improv", "Entertainment", "Creativity", "Team Building"],
     image: "/images/channel-surfing.jpg",
-    price: "₹47",
+    price: "₹79",
   },
   {
     id: 8,
     title: "Spin A Yarn",
     type: "non-tech" as const,
-    date: "2025-03-22",
+    date: "2025-07-30",
     time: "2:00 PM - 4:00 PM",
     venue: "Storytelling Corner",
     description:
@@ -133,13 +139,13 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["Storytelling", "Creativity", "Public Speaking"],
     image: "/images/spin-a-yarn.jpg",
-    price: "₹47",
+    price: "₹79",
   },
   {
     id: 9,
     title: "Photography Contest",
     type: "non-tech" as const,
-    date: "2025-03-15",
+    date: "2025-07-30",
     time: "All Day",
     venue: "Throughout TechFiesta",
     description:
@@ -149,8 +155,24 @@ export const events: Event[] = [
     registrations: 0,
     tags: ["Photography", "Visual Arts", "Contest", "Documentation"],
     image: "/images/photography.jpg",
-    price: "₹47",
+    price: "₹79",
   },
+  {
+    id: 10,
+    title: "TechFiesta Quiz",
+    type: "non-tech" as const,
+    date: "2025-07-30",
+    time: "11:00 AM - 1:00 PM",
+    venue: "Quiz Arena",
+    description:
+      "Test your knowledge about TechFiesta, CIT, and general trivia. A fun and engaging quiz that challenges your memory and quick thinking!",
+    speakers: ["Quiz Masters", "Trivia Experts"],
+    capacity: 60,
+    registrations: 0,
+    tags: ["Quiz", "Trivia", "Knowledge", "Fun"],
+    image: "/images/quiz.jpg",
+    price: "₹99",
+  }
 ];
 
 // Helper functions

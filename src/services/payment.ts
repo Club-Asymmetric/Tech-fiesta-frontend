@@ -52,14 +52,13 @@ export interface PaymentResponse {
 
 // Payment API service
 export const paymentApi = {
-  createOrder: async (amount: number, token: string, registrationData: any) => {
+  createOrder: async (token: string, registrationData: any) => {
     const response = await authenticatedApiRequest(
       "/payment/create-order",
       token,
       {
         method: "POST",
         body: JSON.stringify({
-          amount,
           currency: "INR",
           receipt: `TF2025_${Date.now()}`,
           notes: {
