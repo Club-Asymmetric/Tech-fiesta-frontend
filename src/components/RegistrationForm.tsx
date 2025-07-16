@@ -719,7 +719,43 @@ export default function RegistrationForm() {
 
       const order: PaymentOrder = orderResponse.data;
 
-      // Razorpay options
+      // Method 1: Custom CSS to hide QR code (inject after Razorpay modal opens)
+      const injectCustomStyles = () => {
+        const style = document.createElement('style');
+        style.textContent = `
+          /* Hide QR code section */
+          [data-testid="upi-qr-section"],
+          .upi-qr-section,
+          .qr-code-container,
+          .rzp-qr-section,
+          .rzp-upi-qr,
+          .upi-qr-code {
+            display: none !important;
+          }
+          
+          /* Hide "Scan the QR using any UPI App" text */
+          .rzp-label:contains("Scan the QR"),
+          .upi-qr-label {
+            display: none !important;
+          }
+          
+          /* Make UPI ID section more prominent */
+          .rzp-upi-id-section,
+          .upi-id-section {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+          }
+          
+          /* Hide UPI app icons above QR if present */
+          .rzp-upi-apps,
+          .upi-apps-section {
+            display: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+      };
+
+      // Razorpay options - UPI ID only configuration
       const options = {
         key: order.key,
         amount: order.amount,
@@ -729,6 +765,8 @@ export default function RegistrationForm() {
         order_id: order.orderId,
         handler: async (response: PaymentResponse) => {
           try {
+            console.log("💳 Payment completed! Verifying...", response);
+            
             // Verify payment
             const verifyResponse = await paymentApi.verifyPayment(
               response,
@@ -762,11 +800,6 @@ export default function RegistrationForm() {
             setPaymentLoading(false);
             setIsSubmitting(false);
             setPaymentInProgress(false);
-            // Clear any polling when payment completes
-            if ((window as any).paymentPollingInterval) {
-              clearInterval((window as any).paymentPollingInterval);
-              (window as any).paymentPollingInterval = null;
-            }
           }
         },
         modal: {
@@ -775,13 +808,40 @@ export default function RegistrationForm() {
             setPaymentLoading(false);
             setIsSubmitting(false);
             setPaymentInProgress(false);
-            // Clear polling when modal is dismissed
-            if ((window as any).paymentPollingInterval) {
-              clearInterval((window as any).paymentPollingInterval);
-              (window as any).paymentPollingInterval = null;
-            }
           },
+          confirm_close: true,
+          escape: false,
+          // Add callback when modal opens
+          onload: () => {
+            console.log("🎨 Razorpay modal loaded - applying custom styles");
+            
+            // Inject custom styles to hide QR code
+            setTimeout(() => {
+              injectCustomStyles();
+            }, 500);
+            
+            // Additional attempt to hide QR elements
+            setTimeout(() => {
+              const qrElements = document.querySelectorAll(
+                '[data-testid*="qr"], .qr-code, .rzp-qr, .upi-qr, [class*="qr"]'
+              );
+              qrElements.forEach(el => {
+                if (el && (el as HTMLElement).style) {
+                  (el as HTMLElement).style.display = 'none';
+                }
+              });
+            }, 1000);
+          }
         },
+        // UPI-only method configuration
+        method: {
+          upi: true,
+          card: true,
+          netbanking: true,
+          wallet: true,
+        },
+        preferred: ["upi"],
+        
         prefill: {
           name: formData.name,
           email: formData.email,
@@ -790,100 +850,44 @@ export default function RegistrationForm() {
         theme: {
           color: "#3399cc",
         },
+        notes: {
+          registration_type: "tech_fiesta_2025",
+          user_type: isCit ? "cit_student" : "external",
+        },
+        // Enhanced display configuration
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: "Pay using UPI ID",
+                instruments: [
+                  {
+                    method: "upi",
+                    flows: ["intent"]  // This might help focus on UPI ID input
+                  }
+                ]
+              }
+            },
+            hide: [
+              {
+                method: "upi",
+                flows: ["qr"]  // Try to hide QR flow
+              }
+            ]
+          }
+        }
       };
 
       // Open Razorpay checkout
       const rzp = new (window as any).Razorpay(options);
+      
+      // Add custom CSS to hide QR code if it still appears
+      
       rzp.open();
       setPaymentLoading(false);
 
-      // Start polling IMMEDIATELY for QR code payments (desktop users who scan with mobile)
-      // This handles the case where desktop shows QR code but payment happens on mobile
-      console.log("🔍 Starting immediate payment polling for order:", order.orderId);
-      
-      // First check after 500ms, then every 1 second
-      setTimeout(async () => {
-        // Do first check
-        try {
-          const statusResponse = await paymentApi.getPaymentStatus(order.orderId, token);
-          console.log("📊 Initial polling check:", statusResponse.data?.status);
-        } catch (error) {
-          console.log("📡 Initial payment check:", error);
-        }
-      }, 500);
-      
-      const pollInterval = setInterval(async () => {
-        try {
-          // Check if payment was completed for this order
-          const statusResponse = await paymentApi.getPaymentStatus(order.orderId, token);
-          console.log("📊 Polling result:", statusResponse.data?.status);
-          
-          if (statusResponse.success && statusResponse.data.status === 'completed') {
-            // Payment completed via QR scan! Close modal and simulate success
-            console.log("✅ QR Payment detected! Processing...");
-            clearInterval(pollInterval);
-            (window as any).paymentPollingInterval = null;
-            
-            // Close Razorpay modal if still open
-            rzp.close();
-            
-            // Simulate the handler response for QR payments
-            // We don't have the actual payment response, so we'll verify using order ID
-            toast.success("QR Payment detected! Verifying...", { duration: 3000 });
-            
-            // Create a mock response for verification
-            const mockResponse = {
-              razorpay_order_id: order.orderId,
-              razorpay_payment_id: statusResponse.data.registrationId || 'qr_payment_detected',
-              razorpay_signature: 'qr_scan_detected' // We'll handle this in backend
-            };
-            
-            // Use the same verification logic
-            const verifyResponse = await paymentApi.verifyPayment(
-              mockResponse as any,
-              token,
-              formData
-            );
-
-            if (verifyResponse.success) {
-              setSuccessData({
-                registrationId: verifyResponse.data.registrationId,
-                formData: { ...formData },
-                submissionDate: new Date().toLocaleString(),
-              });
-              
-              const eventCount =
-                formData.selectedEvents.length +
-                formData.selectedWorkshops.length +
-                formData.selectedNonTechEvents.length;
-
-              toast.success(
-                `QR Payment successful! Registration completed. Registration ID: ${verifyResponse.data.registrationId}. Events registered: ${eventCount}. Amount paid: ₹${verifyResponse.data.amount}`,
-                { duration: 8000 }
-              );
-              
-              setPaymentLoading(false);
-              setIsSubmitting(false);
-              setPaymentInProgress(false);
-            }
-          }
-        } catch (error) {
-          // Silent fail for polling - don't spam user with errors
-          console.log("📡 Payment status polling:", error);
-        }
-      }, 1000); // Check every 1 second (faster polling)
-
-      // Store interval reference globally for cleanup
-      (window as any).paymentPollingInterval = pollInterval;
-
-      // Clear polling after 10 minutes (600 seconds) to prevent infinite polling
-      setTimeout(() => {
-        if ((window as any).paymentPollingInterval) {
-          clearInterval((window as any).paymentPollingInterval);
-          (window as any).paymentPollingInterval = null;
-          console.log("⏰ Payment polling timeout - stopped checking");
-        }
-      }, 600000);
+      console.log("� Razorpay modal opened - UPI payment flow initiated");
+      console.log("� User will be prompted to enter UPI ID or use other payment methods");
 
     } catch (error) {
       console.error("Registration submission error:", error);
