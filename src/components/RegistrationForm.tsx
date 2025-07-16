@@ -762,6 +762,11 @@ export default function RegistrationForm() {
             setPaymentLoading(false);
             setIsSubmitting(false);
             setPaymentInProgress(false);
+            // Clear any polling when payment completes
+            if ((window as any).paymentPollingInterval) {
+              clearInterval((window as any).paymentPollingInterval);
+              (window as any).paymentPollingInterval = null;
+            }
           }
         },
         modal: {
@@ -770,6 +775,11 @@ export default function RegistrationForm() {
             setPaymentLoading(false);
             setIsSubmitting(false);
             setPaymentInProgress(false);
+            // Clear polling when modal is dismissed
+            if ((window as any).paymentPollingInterval) {
+              clearInterval((window as any).paymentPollingInterval);
+              (window as any).paymentPollingInterval = null;
+            }
           },
         },
         prefill: {
@@ -786,6 +796,79 @@ export default function RegistrationForm() {
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
       setPaymentLoading(false);
+
+      // Start polling for QR code payments (desktop users who scan with mobile)
+      // This handles the case where desktop shows QR code but payment happens on mobile
+      const pollInterval = setInterval(async () => {
+        try {
+          // Check if payment was completed for this order
+          const statusResponse = await paymentApi.getPaymentStatus(order.orderId, token);
+          
+          if (statusResponse.success && statusResponse.data.status === 'completed') {
+            // Payment completed via QR scan! Close modal and simulate success
+            clearInterval(pollInterval);
+            (window as any).paymentPollingInterval = null;
+            
+            // Close Razorpay modal if still open
+            rzp.close();
+            
+            // Simulate the handler response for QR payments
+            // We don't have the actual payment response, so we'll verify using order ID
+            toast.success("Payment detected! Verifying...", { duration: 3000 });
+            
+            // Create a mock response for verification
+            const mockResponse = {
+              razorpay_order_id: order.orderId,
+              razorpay_payment_id: statusResponse.data.registrationId || 'qr_payment_detected',
+              razorpay_signature: 'qr_scan_detected' // We'll handle this in backend
+            };
+            
+            // Use the same verification logic
+            const verifyResponse = await paymentApi.verifyPayment(
+              mockResponse as any,
+              token,
+              formData
+            );
+
+            if (verifyResponse.success) {
+              setSuccessData({
+                registrationId: verifyResponse.data.registrationId,
+                formData: { ...formData },
+                submissionDate: new Date().toLocaleString(),
+              });
+              
+              const eventCount =
+                formData.selectedEvents.length +
+                formData.selectedWorkshops.length +
+                formData.selectedNonTechEvents.length;
+
+              toast.success(
+                `QR Payment successful! Registration completed. Registration ID: ${verifyResponse.data.registrationId}. Events registered: ${eventCount}. Amount paid: ₹${verifyResponse.data.amount}`,
+                { duration: 8000 }
+              );
+              
+              setPaymentLoading(false);
+              setIsSubmitting(false);
+              setPaymentInProgress(false);
+            }
+          }
+        } catch (error) {
+          // Silent fail for polling - don't spam user with errors
+          console.log("Payment status polling:", error);
+        }
+      }, 3000); // Check every 3 seconds
+
+      // Store interval reference globally for cleanup
+      (window as any).paymentPollingInterval = pollInterval;
+
+      // Clear polling after 10 minutes (600 seconds) to prevent infinite polling
+      setTimeout(() => {
+        if ((window as any).paymentPollingInterval) {
+          clearInterval((window as any).paymentPollingInterval);
+          (window as any).paymentPollingInterval = null;
+          console.log("Payment polling timeout - stopped checking");
+        }
+      }, 600000);
 
     } catch (error) {
       console.error("Registration submission error:", error);
