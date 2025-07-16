@@ -150,3 +150,36 @@ export const loadRazorpayScript = (): Promise<boolean> => {
     document.body.appendChild(script);
   });
 };
+
+// Get payment warnings
+export interface PaymentWarnings {
+  warnings: string[];
+  title: string;
+  subtitle: string;
+}
+
+export const getPaymentWarnings = async (): Promise<PaymentWarnings> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/payment/payment-warnings`);
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(result.message || 'Failed to fetch payment warnings');
+    }
+  } catch (error) {
+    console.error('Error fetching payment warnings:', error);
+    // Return default warnings as fallback
+    return {
+      warnings: [
+        "⚠️ DO NOT close this browser tab during payment",
+        "⚠️ DO NOT navigate to other pages until payment is complete", 
+        "⚠️ Keep this page open until you see the confirmation message",
+        "⚠️ If you close the page during payment, your registration may not be completed even if payment succeeds"
+      ],
+      title: "Important Payment Instructions",
+      subtitle: "Please read carefully before proceeding"
+    };
+  }
+};
