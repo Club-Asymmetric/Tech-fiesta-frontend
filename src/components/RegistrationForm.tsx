@@ -797,15 +797,30 @@ export default function RegistrationForm() {
       rzp.open();
       setPaymentLoading(false);
 
-      // Start polling for QR code payments (desktop users who scan with mobile)
+      // Start polling IMMEDIATELY for QR code payments (desktop users who scan with mobile)
       // This handles the case where desktop shows QR code but payment happens on mobile
+      console.log("🔍 Starting immediate payment polling for order:", order.orderId);
+      
+      // First check after 500ms, then every 1 second
+      setTimeout(async () => {
+        // Do first check
+        try {
+          const statusResponse = await paymentApi.getPaymentStatus(order.orderId, token);
+          console.log("📊 Initial polling check:", statusResponse.data?.status);
+        } catch (error) {
+          console.log("📡 Initial payment check:", error);
+        }
+      }, 500);
+      
       const pollInterval = setInterval(async () => {
         try {
           // Check if payment was completed for this order
           const statusResponse = await paymentApi.getPaymentStatus(order.orderId, token);
+          console.log("📊 Polling result:", statusResponse.data?.status);
           
           if (statusResponse.success && statusResponse.data.status === 'completed') {
             // Payment completed via QR scan! Close modal and simulate success
+            console.log("✅ QR Payment detected! Processing...");
             clearInterval(pollInterval);
             (window as any).paymentPollingInterval = null;
             
@@ -814,7 +829,7 @@ export default function RegistrationForm() {
             
             // Simulate the handler response for QR payments
             // We don't have the actual payment response, so we'll verify using order ID
-            toast.success("Payment detected! Verifying...", { duration: 3000 });
+            toast.success("QR Payment detected! Verifying...", { duration: 3000 });
             
             // Create a mock response for verification
             const mockResponse = {
@@ -854,9 +869,9 @@ export default function RegistrationForm() {
           }
         } catch (error) {
           // Silent fail for polling - don't spam user with errors
-          console.log("Payment status polling:", error);
+          console.log("📡 Payment status polling:", error);
         }
-      }, 3000); // Check every 3 seconds
+      }, 1000); // Check every 1 second (faster polling)
 
       // Store interval reference globally for cleanup
       (window as any).paymentPollingInterval = pollInterval;
@@ -866,7 +881,7 @@ export default function RegistrationForm() {
         if ((window as any).paymentPollingInterval) {
           clearInterval((window as any).paymentPollingInterval);
           (window as any).paymentPollingInterval = null;
-          console.log("Payment polling timeout - stopped checking");
+          console.log("⏰ Payment polling timeout - stopped checking");
         }
       }, 600000);
 
