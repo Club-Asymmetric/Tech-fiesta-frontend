@@ -766,6 +766,11 @@ export default function RegistrationForm() {
         handler: async (response: PaymentResponse) => {
           try {
             console.log("💳 Payment completed! Verifying...", response);
+            console.log("📊 Payment response details:", {
+              orderId: response.razorpay_order_id,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature
+            });
             
             // Verify payment
             const verifyResponse = await paymentApi.verifyPayment(
@@ -774,7 +779,11 @@ export default function RegistrationForm() {
               formData
             );
 
+            console.log("🔍 Payment verification response:", verifyResponse);
+
             if (verifyResponse.success) {
+              console.log("✅ Payment verification successful:", verifyResponse.data);
+              
               setSuccessData({
                 registrationId: verifyResponse.data.registrationId,
                 formData: { ...formData },
@@ -791,10 +800,16 @@ export default function RegistrationForm() {
                 { duration: 8000 }
               );
             } else {
+              console.error("❌ Payment verification failed:", verifyResponse);
               toast.error(verifyResponse.message || "Payment verification failed");
             }
-          } catch (error) {
+          } catch (error: any) {
             console.error("Payment verification error:", error);
+            console.error("Error details:", {
+              message: error?.message,
+              stack: error?.stack,
+              response: error?.response?.data
+            });
             toast.error("Payment verification failed. Please contact support with your payment details.");
           } finally {
             setPaymentLoading(false);
