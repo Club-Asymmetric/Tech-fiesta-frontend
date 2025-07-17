@@ -21,9 +21,11 @@ export const downloadRegistrationPDF = (data: RegistrationDownloadData) => {
   const addText = (
     text: string,
     fontSize: number = 10,
-    isBold: boolean = false
+    isBold: boolean = false,
+    color: [number, number, number] = [0, 0, 0]
   ) => {
     doc.setFontSize(fontSize);
+    doc.setTextColor(color[0], color[1], color[2]);
     if (isBold) {
       doc.setFont("helvetica", "bold");
     } else {
@@ -32,7 +34,7 @@ export const downloadRegistrationPDF = (data: RegistrationDownloadData) => {
 
     const lines = doc.splitTextToSize(text, pageWidth - margin * 2);
     doc.text(lines, margin, yPosition);
-    yPosition += lines.length * (fontSize * 0.4);
+    yPosition += lines.length * (fontSize * 0.4) + 2;
     return yPosition;
   };
 
@@ -40,91 +42,152 @@ export const downloadRegistrationPDF = (data: RegistrationDownloadData) => {
     yPosition += space;
   };
 
-  // Header
-  doc.setFillColor(59, 130, 246); // Blue background
-  doc.rect(0, 0, pageWidth, 25, "F");
+  const addCenteredText = (text: string, fontSize: number = 10, isBold: boolean = false, color: [number, number, number] = [255, 255, 255]) => {
+    doc.setFontSize(fontSize);
+    doc.setTextColor(color[0], color[1], color[2]);
+    if (isBold) {
+      doc.setFont("helvetica", "bold");
+    } else {
+      doc.setFont("helvetica", "normal");
+    }
+    doc.text(text, pageWidth / 2, yPosition, { align: "center" });
+    yPosition += fontSize * 0.4 + 2;
+  };
 
-  doc.setTextColor(255, 255, 255); // White text
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("Tech Fiesta 2025 - Registration Confirmation", pageWidth / 2, 15, {
-    align: "center",
-  });
+  // Header with gradient-like effect
+  doc.setFillColor(99, 102, 241); // Purple/blue background
+  doc.rect(0, 0, pageWidth, 50, "F");
 
-  // Reset text color
+  // "Registration Confirmed!" with party emoji effect
+  yPosition = 20;
+  addCenteredText("Registration Confirmed!", 20, true, [255, 255, 255]);
+  
+  // Tech Fiesta 2025
+  addCenteredText("Tech Fiesta 2025", 16, true, [255, 255, 255]);
+  
+  // Chennai Institute of Technology
+  addCenteredText("Chennai Institute of Technology", 12, false, [255, 255, 255]);
+
+  // Reset text color and position
   doc.setTextColor(0, 0, 0);
-  yPosition = 35;
+  yPosition = 70;
 
-  // Registration ID and Date
-  addText(`Registration ID: ${data.registrationId}`, 12, true);
-  addText(`Submission Date: ${data.submissionDate}`, 10);
-  addSpacing(10);
-
-  // Personal Information
-  addText("PERSONAL INFORMATION", 14, true);
+  // Registration Details Section with background
+  doc.setFillColor(240, 248, 255); // Light blue background
+  doc.rect(margin - 5, yPosition - 5, pageWidth - 2 * margin + 10, 85, "F");
+  
+  addText("Registration Details", 14, true);
   addSpacing(3);
-  addText(`Name: ${data.name}`, 10);
-  addText(`Department: ${data.department}`, 10);
-  addText(`Email: ${data.email}`, 10);
-  addText(`WhatsApp: ${data.whatsapp}`, 10);
-  addText(`College: ${data.college}`, 10);
-  addText(`Year of Study: ${data.year}`, 10);
+  addText(`Registration ID: ${data.registrationId}`, 11, true);
+  addText(`Participant Name: ${data.name}`, 11);
+  addText(`Email: ${data.email}`, 11);
+  addText(`College: ${data.college}`, 11);
+  addText(`Department: ${data.department}`, 11);
+  addText(`Year of Study: ${data.year}`, 11);
+  addText(`WhatsApp: ${data.whatsapp}`, 11);
+  addText(`Student Type: ${data.college.toLowerCase().includes('cit') ? 'CIT Student' : 'External Student'}`, 11);
+  
   addSpacing(10);
 
-  // Event Registrations
-  if (
-    data.selectedEvents.length > 0 ||
-    data.selectedWorkshops.length > 0 ||
-    data.selectedNonTechEvents.length > 0
-  ) {
-    addText("EVENT REGISTRATIONS", 14, true);
-    addSpacing(3);
+  // Registration Type with colored background
+  const isFreeMember = data.selectedEvents.length === 0 && data.selectedWorkshops.length === 0;
+  if (isFreeMember || data.selectedNonTechEvents.length > 0) {
+    doc.setFillColor(220, 252, 231); // Light green background
+    doc.rect(margin - 5, yPosition - 5, pageWidth - 2 * margin + 10, 25, "F");
+    addText("Registration Type: Free Registration", 11, true, [34, 197, 94]);
+    addText("No payment required for your selected events", 10, false, [75, 85, 99]);
+    addSpacing(10);
+  }
 
-    // Technical Events
-    if (data.selectedEvents.length > 0) {
-      addText("Technical Events:", 12, true);
-      data.selectedEvents.forEach((selectedEvent) => {
-        const event = events.find((e) => e.id === selectedEvent.id);
-        if (event) {
-          addText(`• ${selectedEvent.title} - ${event.price || "₹69"}`, 10);
+  // Technical Events Section
+  if (data.selectedEvents.length > 0) {
+    addText("Technical Events Registered", 14, true);
+    addSpacing(5);
+    
+    data.selectedEvents.forEach((selectedEvent) => {
+      const event = events.find((e) => e.id === selectedEvent.id);
+      if (event) {
+        // Event name
+        addText(selectedEvent.title, 12, true);
+        
+        // Event details with icons
+        addText(`Date: 2025-07-30`, 10);
+        addText(`Time: 11:00 AM - 1:00 PM`, 10);
+        addText(`Venue: ${selectedEvent.title === 'TechFiesta Quiz' ? 'Quiz Arena' : 'Tech Lab'}`, 10);
+        
+        // Description
+        if (event.description) {
+          addText(`Description: ${event.description}`, 10);
         }
-      });
-      addSpacing(5);
-    }
+        
+        // Payment info
+        addText(`Payment: At venue on arrival`, 10);
+        addSpacing(8);
+      }
+    });
+  }
 
-    // Workshops
-    if (data.selectedWorkshops.length > 0) {
-      addText("Workshops:", 12, true);
-      data.selectedWorkshops.forEach((selectedWorkshop) => {
-        const workshop = workshops.find((w) => w.id === selectedWorkshop.id);
-        if (workshop) {
-          addText(
-            `• ${selectedWorkshop.title} - ${workshop.price || "₹101"}`,
-            10
-          );
+  // Non-Technical Events Section
+  if (data.selectedNonTechEvents.length > 0) {
+    addText("Non-Technical Events Registered", 14, true);
+    addSpacing(2);
+    
+    // Warning box
+    doc.setFillColor(254, 243, 199); // Light yellow background
+    doc.rect(margin - 5, yPosition - 2, pageWidth - 2 * margin + 10, 20, "F");
+    addText("Important: Payment for non-technical events is required at the venue on the day of the event.", 10, true, [146, 64, 14]);
+    addSpacing(8);
+    
+    data.selectedNonTechEvents.forEach((selectedEvent) => {
+      const event = events.find((e) => e.id === selectedEvent.id);
+      if (event) {
+        // Event name
+        addText(selectedEvent.title, 12, true);
+        
+        // Event details based on event type
+        if (selectedEvent.title === 'Channel Surfing') {
+          addText(`Date: 2025-07-30`, 10);
+          addText(`Time: 3:00 PM - 5:00 PM`, 10);
+          addText(`Venue: Entertainment Hall`, 10);
+          addText(`Description: Fast-paced improv game where teams act out scenes from random TV genres - news, drama, sports, etc. Switch roles on the spot with humor and creativity!`, 10);
+        } else {
+          addText(`Date: 2025-07-30`, 10);
+          addText(`Time: TBA`, 10);
+          addText(`Venue: TBA`, 10);
+          if (event.description) {
+            addText(`Description: ${event.description}`, 10);
+          }
         }
-      });
-      addSpacing(5);
-    }
+        
+        addText(`Payment: At venue on arrival`, 10);
+        addSpacing(8);
+      }
+    });
+  }
 
-    // Non-Tech Events
-    if (data.selectedNonTechEvents.length > 0) {
-      addText("Non-Technical Events:", 12, true);
-      data.selectedNonTechEvents.forEach((selectedEvent) => {
-        const event = events.find((e) => e.id === selectedEvent.id);
-        if (event) {
-          addText(`• ${selectedEvent.title} - Payment on arrival`, 10);
-        }
-      });
-      addSpacing(5);
-    }
+  // Workshops Section
+  if (data.selectedWorkshops.length > 0) {
+    addText("Workshops Registered", 14, true);
+    addSpacing(5);
+    
+    data.selectedWorkshops.forEach((selectedWorkshop) => {
+      const workshop = workshops.find((w) => w.id === selectedWorkshop.id);
+      if (workshop) {
+        addText(selectedWorkshop.title, 12, true);
+        addText(`Date: 2025-07-30`, 10);
+        addText(`Duration: ${workshop.duration}`, 10);
+        addText(`Venue: Workshop Hall`, 10);
+        addText(`Payment: ${workshop.price}`, 10);
+        addSpacing(8);
+      }
+    });
   }
 
   // Team Information
   if (data.isTeamEvent && data.teamMembers && data.teamMembers.length > 0) {
-    addText("TEAM INFORMATION", 14, true);
+    addText("Team Information", 14, true);
     addSpacing(3);
-    addText(`Team Size: ${data.teamSize}`, 10);
+    addText(`Team Size: ${data.teamSize}`, 11);
     addText("Team Members:", 12, true);
     data.teamMembers.forEach((member, index) => {
       addText(`${index + 2}. ${member.name} (${member.email})`, 10);
@@ -133,37 +196,38 @@ export const downloadRegistrationPDF = (data: RegistrationDownloadData) => {
     addSpacing(10);
   }
 
-  // Payment Information
-  const hasPayments = Object.keys(data.transactionIds).length > 0;
-  if (hasPayments) {
-    addText("PAYMENT INFORMATION", 14, true);
-    addSpacing(3);
-    Object.entries(data.transactionIds).forEach(([key, transactionId]) => {
-      if (transactionId) {
-        addText(`${key}: ${transactionId}`, 10);
-      }
-    });
-    addSpacing(10);
-  }
-
-  // Important Notes
-  addText("IMPORTANT NOTES", 14, true);
+  // Important Instructions Box
+  doc.setFillColor(59, 130, 246); // Blue background
+  doc.rect(margin - 5, yPosition - 5, pageWidth - 2 * margin + 10, 80, "F");
+  
+  addText("Important Instructions", 14, true, [255, 255, 255]);
   addSpacing(3);
-  addText("• Please bring this registration confirmation to the event", 10);
-  addText("• Keep your payment receipts safe for verification", 10);
-  addText("• Contact support if you need to make any changes", 10);
-  addText("• Arrive at least 15 minutes before your event time", 10);
+  addText("• Save this email for your records - you'll need it for event entry", 10, false, [255, 255, 255]);
+  addText("• Bring a valid ID card to all events for verification", 10, false, [255, 255, 255]);
+  addText("• Arrive 15 minutes early to all registered events", 10, false, [255, 255, 255]);
+  addText("• Non-tech events require payment at the venue before participation", 10, false, [255, 255, 255]);
+  addText("• Follow event-specific guidelines that will be shared at the venue", 10, false, [255, 255, 255]);
+  addText("• Contact support if you have any questions about your registration", 10, false, [255, 255, 255]);
+  
+  addSpacing(15);
+
+  // Contact Information
+  doc.setTextColor(0, 0, 0);
+  addText("Contact Information", 14, true);
+  addSpacing(3);
+  addText("Email: techfiesta@citchennai.net", 11);
+  addText("Event Queries: Contact event coordinators at the venue", 11);
+  addText("Registration Support: Show this email and your ID at registration desk", 11);
+  
+  addSpacing(15);
 
   // Footer
-  addSpacing(15);
-  doc.setFontSize(8);
-  doc.setTextColor(128, 128, 128);
-  doc.text(
-    "This is an automatically generated document. Please preserve it for your records.",
-    pageWidth / 2,
-    yPosition,
-    { align: "center" }
-  );
+  addCenteredText("Thank you for registering for Tech Fiesta 2025!", 12, false, [75, 85, 99]);
+  addCenteredText("Chennai Institute of Technology", 11, true, [75, 85, 99]);
+  addSpacing(5);
+  addCenteredText("For any queries, contact us at techfiesta@citchennai.net", 10, false, [75, 85, 99]);
+  addSpacing(3);
+  addCenteredText("© 2025 Tech Fiesta - Chennai Institute of Technology", 8, false, [128, 128, 128]);
 
   // Save the PDF
   doc.save(`Tech-Fiesta-2025-Registration-${data.registrationId}.pdf`);

@@ -8,16 +8,10 @@ export const workshops: Workshop[] = [
     category: "3D Design",
     level: "Beginner" as const,
     duration: "1 - 1.5 hours",
-    date: "2025-07-30",
-    time: "9:00 AM - 3:00 PM",
-    venue: "3D Design Studio",
-    instructor: "3D Artist & Blender Expert",
     description:
       "Master 3D modeling with Blender! Learn interface navigation, essential tools, create and render 3D models, and integrate them into web experiences.",
     prerequisites: ["Basic computer knowledge", "Interest in 3D design"],
     materials: ["Laptop", "Blender installed", "Mouse recommended"],
-    capacity: 60,
-    registrations: 0,
     price: "₹100",
     citPrice: "₹100",
     tags: ["Blender", "3D Modeling", "Web Integration", "Visualization"],
@@ -37,10 +31,6 @@ export const workshops: Workshop[] = [
     category: "Cybersecurity",
     level: "Intermediate" as const,
     duration: "1 - 1.5 hours",
-    date: "2025-07-30",
-    time: "10:00 AM - 3:00 PM",
-    venue: "Automotive Security Lab",
-    instructor: "Automotive Security Specialist",
     description:
       "Explore cybersecurity challenges in automotive OEMs. Learn to safeguard vehicle systems, secure communication protocols, and ensure software integrity.",
     prerequisites: [
@@ -48,8 +38,6 @@ export const workshops: Workshop[] = [
       "Understanding of automotive systems",
     ],
     materials: ["Laptop", "Security tools access", "Case study materials"],
-    capacity: 60,
-    registrations: 0,
     price: "₹100",
     citPrice: "₹100",
     tags: ["Automotive Security", "OEM", "Vehicle Systems", "Cyber Threats"],
@@ -68,16 +56,10 @@ export const workshops: Workshop[] = [
     category: "AI/ML",
     level: "Intermediate" as const,
     duration: "1 - 1.5 hours",
-    date: "2025-07-30",
-    time: "9:00 AM - 4:00 PM",
-    venue: "AI/ML Lab",
-    instructor: "Machine Learning Engineer",
     description:
       "Comprehensive ML workshop covering key algorithms, model training, evaluation, and local fine-tuning. Hands-on experience with real-world applications.",
     prerequisites: ["Python programming", "Basic statistics knowledge"],
     materials: ["Laptop", "Python environment", "Jupyter notebooks"],
-    capacity: 60,
-    registrations: 0,
     price: "₹100",
     citPrice: "₹100",
     tags: ["Machine Learning", "Model Training", "Python", "Algorithms"],
@@ -96,16 +78,10 @@ export const workshops: Workshop[] = [
     category: "Web Development",
     level: "Beginner" as const,
     duration: "1 - 1.5 hours",
-    date: "2025-07-30",
-    time: "9:00 AM - 5:00 PM",
-    venue: "Web Development Lab",
-    instructor: "Full Stack Developer",
     description:
       "Build scalable, responsive web applications using modern frameworks. Learn core principles, UI design, performance optimization, and deployment best practices.",
     prerequisites: ["Basic HTML/CSS knowledge", "Programming fundamentals"],
     materials: ["Laptop", "Code editor", "Modern web browser"],
-    capacity: 60,
-    registrations: 0,
     price: "₹100",
     citPrice: "₹100",
     tags: [
@@ -129,10 +105,6 @@ export const workshops: Workshop[] = [
     category: "DevOps",
     level: "Advanced" as const,
     duration: "1 - 1.5 hours",
-    date: "2025-07-30",
-    time: "10:00 AM - 4:00 PM",
-    venue: "Cloud Computing Lab",
-    instructor: "DevSecOps Engineer",
     description:
       "Master cloud computing and DevSecOps practices. Hands-on experience with cloud platforms, security integration, and automated deployment pipelines.",
     prerequisites: [
@@ -141,8 +113,6 @@ export const workshops: Workshop[] = [
       "Development experience",
     ],
     materials: ["Laptop", "Cloud platform access", "Terminal/CLI tools"],
-    capacity: 60,
-    registrations: 0,
     price: "₹100",
     citPrice: "₹100",
     tags: ["Cloud Computing", "DevSecOps", "Security", "Automation"],
@@ -156,6 +126,32 @@ export const workshops: Workshop[] = [
       "Container orchestration and microservices security",
     ],
   },
+  {
+    id: 6,
+    title: "FinTech",
+    category: "Finance Technology",
+    level: "Beginner" as const,
+    duration: "1 - 1.5 hours",
+    description:
+      "Dive into the world of financial technology! Learn the basics of digital payments, blockchain, online banking, and how technology is transforming the finance industry. Get hands-on with FinTech tools and discover career opportunities in this fast-growing sector.",
+    prerequisites: [
+      "Basic computer knowledge",
+      "Interest in finance or technology",
+    ],
+    materials: ["Laptop", "Internet access"],
+    price: "₹100",
+    citPrice: "₹100",
+    tags: ["FinTech", "Digital Payments", "Blockchain", "Online Banking", "Finance"],
+    syllabus: [
+      "Introduction to FinTech and its impact on finance",
+      "Overview of digital payments and online banking",
+      "Basics of blockchain and cryptocurrencies",
+      "Hands-on demo of popular FinTech apps and platforms",
+      "Cybersecurity and privacy in financial technology",
+      "Career opportunities in FinTech",
+      "Q&A and interactive discussion",
+    ],
+  }
 ];
 
 // Helper functions
@@ -168,11 +164,6 @@ export const getWorkshopsByLevel = (
 
 export const getWorkshopById = (id: number): Workshop | undefined =>
   workshops.find((workshop) => workshop.id === id);
-
-export const getAvailableWorkshops = (): Workshop[] =>
-  workshops.filter(
-    (workshop) => (workshop?.registrations ?? 0) < (workshop.capacity ?? 0)
-  );
 
 export const getWorkshopCategories = (): string[] => [
   ...new Set(workshops.map((workshop) => workshop.category)),

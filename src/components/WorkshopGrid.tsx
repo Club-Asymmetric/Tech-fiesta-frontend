@@ -71,19 +71,6 @@ const WorkshopGrid: React.FC<WorkshopGridProps> = ({
           </div>
         )}
       </div>
-      {/* Category Tags */}
-      <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <span
-              key={category}
-              className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm border border-purple-500/30"
-            >
-              {category}
-            </span>
-          ))}
-        </div>
-      </div>
       {/* Workshops Grid */}
       {filteredWorkshops.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

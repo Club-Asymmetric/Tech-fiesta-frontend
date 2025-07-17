@@ -4,15 +4,8 @@ export interface Event {
   id: number;
   title: string;
   type: "tech" | "non-tech";
-  date: string;
-  time: string;
-  venue: string;
   description: string;
-  speakers?: string[];
-  capacity?: number;
-  registrations?: number;
   tags?: string[];
-  image?: string;
   price?: string; // Regular price
   citPrice?: string; // CIT student price
   maxTeamSize?: number; // Maximum team size for events that allow teams
@@ -24,15 +17,9 @@ export interface Workshop {
   category: string;
   level?: "Beginner" | "Intermediate" | "Advanced";
   duration: string;
-  date: string;
-  time: string;
-  venue: string;
-  instructor: string;
   description: string;
   prerequisites?: string[];
   materials?: string[];
-  capacity?: number;
-  registrations?: number;
   price: string; // Regular price
   citPrice?: string; // CIT student price
   tags?: string[];
