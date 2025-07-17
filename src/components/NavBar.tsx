@@ -40,6 +40,22 @@ export default function NavBar() {
 
   return (
     <>
+      {/* CIT Logo - Fixed top-left corner */}
+      <div className="fixed top-4 left-4 z-50 pointer-events-auto">
+        <a 
+          href="https://www.citchennai.edu.in/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="block"
+        >
+          <img 
+            src="/CITLogo.png" 
+            alt="Chennai Institute of Technology" 
+            className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain hover:scale-110 transition-transform duration-200 drop-shadow-lg cursor-pointer"
+          />
+        </a>
+      </div>
+
       <nav className="fixed top-4 left-0 z-50 w-full flex justify-center pointer-events-none animate-[slideDown_0.4s_ease-out_forwards]">
         <style jsx>{`
           @keyframes slideDown {
