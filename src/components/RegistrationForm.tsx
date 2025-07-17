@@ -642,19 +642,23 @@ export default function RegistrationForm() {
           const registrationResponse = await registrationApi.submit(formData, token);
           
           if (registrationResponse.success) {
+            // Log the full response for debugging
+            console.log("Free registration response:", registrationResponse);
+            
+            const registrationId = registrationResponse.data?.registrationId || "MISSING_ID";
+            const eventCount = registrationResponse.data?.eventCount || 
+                             (formData.selectedEvents.length +
+                              formData.selectedWorkshops.length +
+                              formData.selectedNonTechEvents.length);
+            
             setSuccessData({
-              registrationId: registrationResponse.data.registrationId,
+              registrationId: registrationId,
               formData: { ...formData },
               submissionDate: new Date().toLocaleString(),
             });
-            
-            const eventCount =
-              formData.selectedEvents.length +
-              formData.selectedWorkshops.length +
-              formData.selectedNonTechEvents.length;
 
             toast.success(
-              `Registration completed successfully! Registration ID: ${registrationResponse.data.registrationId}. Events registered: ${eventCount}. No payment required.`,
+              `Registration completed successfully! Registration ID: ${registrationId}. Events registered: ${eventCount}. No payment required.`,
               { duration: 8000 }
             );
           } else {
