@@ -498,9 +498,9 @@ export default function RegistrationForm() {
   const handlePassSelection = (passId: number) => {
     setFormData((prev) => ({
       ...prev,
+      // Toggle pass selection: if same pass is clicked, deselect it; otherwise select it
       selectedPass: prev.selectedPass === passId ? undefined : passId,
-      // If selecting a pass, clear individual workshop selections
-      // but keep events since pass allows unlimited events
+      // If deselecting a pass, keep workshop selections; if selecting a pass, clear workshops
       selectedWorkshops:
         prev.selectedPass === passId ? prev.selectedWorkshops : [],
     }));
@@ -1729,6 +1729,10 @@ export default function RegistrationForm() {
                     ALL technical events + choose any ONE workshop! Perfect for
                     maximum flexibility and savings.
                   </p>
+                  <p className="text-yellow-200 text-xs mt-2">
+                    <strong>💡 Tip:</strong> Click again to deselect the pass if
+                    you change your mind.
+                  </p>
                 </div>
 
                 <div className="space-y-4 w-full">
@@ -1742,7 +1746,7 @@ export default function RegistrationForm() {
                       }`}
                     >
                       <input
-                        type="radio"
+                        type="checkbox"
                         checked={formData.selectedPass === pass.id}
                         onChange={() => handlePassSelection(pass.id)}
                         className="w-5 h-5 text-yellow-600 bg-white/10 border-white/30 rounded focus:ring-yellow-500 flex-shrink-0 mt-1"
