@@ -74,6 +74,7 @@ export interface RegistrationFormData {
 
   // Pass selection
   selectedPass?: number; // Pass ID if selected
+  ispass?: boolean; // Boolean to track if user has selected a pass
 
   // Payment details
   transactionIds: Record<string, string>; // Flexible structure for individual event/workshop transaction IDs

@@ -198,7 +198,7 @@ export const downloadRegistrationPDF = (data: RegistrationDownloadData) => {
 
   // Important Instructions Box
   doc.setFillColor(59, 130, 246); // Blue background
-  doc.rect(margin - 5, yPosition - 5, pageWidth - 2 * margin + 10, 80, "F");
+  doc.rect(margin - 5, yPosition - 7, pageWidth - 2 * margin + 10, 55, "F");
   
   addText("Important Instructions", 14, true, [255, 255, 255]);
   addSpacing(3);
@@ -215,7 +215,7 @@ export const downloadRegistrationPDF = (data: RegistrationDownloadData) => {
   doc.setTextColor(0, 0, 0);
   addText("Contact Information", 14, true);
   addSpacing(3);
-  addText("Email: techfiesta@citchennai.net", 11);
+  addText("Email: asymmetric@citchennai.net", 11);
   addText("Event Queries: Contact event coordinators at the venue", 11);
   addText("Registration Support: Show this email and your ID at registration desk", 11);
   
@@ -225,9 +225,9 @@ export const downloadRegistrationPDF = (data: RegistrationDownloadData) => {
   addCenteredText("Thank you for registering for Tech Fiesta 2025!", 12, false, [75, 85, 99]);
   addCenteredText("Chennai Institute of Technology", 11, true, [75, 85, 99]);
   addSpacing(5);
-  addCenteredText("For any queries, contact us at techfiesta@citchennai.net", 10, false, [75, 85, 99]);
-  addSpacing(3);
+  addCenteredText("For any queries, contact us at asymmetric@citchennai.net", 10, false, [75, 85, 99]);
   addCenteredText("© 2025 Tech Fiesta - Chennai Institute of Technology", 8, false, [128, 128, 128]);
+  addSpacing(5);
 
   // Save the PDF
   doc.save(`Tech-Fiesta-2025-Registration-${data.registrationId}.pdf`);

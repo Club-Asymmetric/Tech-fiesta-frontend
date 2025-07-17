@@ -80,6 +80,8 @@ export default function RegistrationForm() {
     selectedEvents: [],
     selectedWorkshops: [],
     selectedNonTechEvents: [],
+    selectedPass: undefined,
+    ispass: false,
     transactionIds: {},
     hasConsented: false,
   });
@@ -455,6 +457,9 @@ export default function RegistrationForm() {
         );
         return {
           ...prev,
+          // Clear pass selection when individual events are selected
+          selectedPass: undefined,
+          ispass: false,
           selectedEvents: isSelected
             ? prev.selectedEvents.filter((item) => item.id !== eventId)
             : [...prev.selectedEvents, { id: event.id, title: event.title }],
@@ -468,6 +473,9 @@ export default function RegistrationForm() {
         );
         return {
           ...prev,
+          // Clear pass selection when individual workshops are selected
+          selectedPass: undefined,
+          ispass: false,
           selectedWorkshops: isSelected
             ? prev.selectedWorkshops.filter((item) => item.id !== eventId)
             : [
@@ -484,6 +492,9 @@ export default function RegistrationForm() {
         );
         return {
           ...prev,
+          // Clear pass selection when individual non-tech events are selected
+          selectedPass: undefined,
+          ispass: false,
           selectedNonTechEvents: isSelected
             ? prev.selectedNonTechEvents.filter((item) => item.id !== eventId)
             : [
@@ -496,14 +507,22 @@ export default function RegistrationForm() {
   };
 
   const handlePassSelection = (passId: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      // Toggle pass selection: if same pass is clicked, deselect it; otherwise select it
-      selectedPass: prev.selectedPass === passId ? undefined : passId,
-      // If deselecting a pass, keep workshop selections; if selecting a pass, clear workshops
-      selectedWorkshops:
-        prev.selectedPass === passId ? prev.selectedWorkshops : [],
-    }));
+    setFormData((prev) => {
+      const isDeselecting = prev.selectedPass === passId;
+      
+      return {
+        ...prev,
+        // Toggle pass selection: if same pass is clicked, deselect it; otherwise select it
+        selectedPass: isDeselecting ? undefined : passId,
+        // Set ispass field based on whether a pass is selected
+        ispass: !isDeselecting,
+        // When selecting a pass, clear all individual selections to prevent conflicts
+        // When deselecting a pass, keep existing selections
+        selectedEvents: isDeselecting ? prev.selectedEvents : [],
+        selectedWorkshops: isDeselecting ? prev.selectedWorkshops : [],
+        selectedNonTechEvents: isDeselecting ? prev.selectedNonTechEvents : [],
+      };
+    });
   };
 
   const handleTeamMemberChange = (
