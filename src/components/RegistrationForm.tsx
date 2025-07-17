@@ -9,10 +9,21 @@ import {
   Pass,
   RegistrationFormData,
   TeamMember,
-
 } from "@/types";
-import { eventsApi, workshopsApi, passesApi, registrationApi } from "@/services/api";
-import { paymentApi, loadRazorpayScript, PaymentOrder, PaymentResponse, getPaymentWarnings, PaymentWarnings } from "@/services/payment";
+import {
+  eventsApi,
+  workshopsApi,
+  passesApi,
+  registrationApi,
+} from "@/services/api";
+import {
+  paymentApi,
+  loadRazorpayScript,
+  PaymentOrder,
+  PaymentResponse,
+  getPaymentWarnings,
+  PaymentWarnings,
+} from "@/services/payment";
 import { useAuth } from "@/contexts/AuthContext";
 import PaymentWarningModal from "./PaymentWarningModal";
 import { getPassLimits, isWithinPassLimits } from "@/config/passLimits";
@@ -61,7 +72,7 @@ export default function RegistrationForm() {
     department: "",
     email: user?.email || "",
     whatsapp: "",
-    college: "",
+    college: isCit ? "Chennai Institute Of Technology" : "",
     year: "",
     isTeamEvent: false,
     teamSize: 1,
@@ -84,7 +95,8 @@ export default function RegistrationForm() {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
-  const [paymentWarnings, setPaymentWarnings] = useState<PaymentWarnings | null>(null);
+  const [paymentWarnings, setPaymentWarnings] =
+    useState<PaymentWarnings | null>(null);
   const [paymentInProgress, setPaymentInProgress] = useState(false);
 
   // Load events, workshops, and passes from API
@@ -140,7 +152,8 @@ export default function RegistrationForm() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (paymentInProgress) {
         e.preventDefault();
-        e.returnValue = 'Payment in progress. Are you sure you want to leave? This may result in payment without registration.';
+        e.returnValue =
+          "Payment in progress. Are you sure you want to leave? This may result in payment without registration.";
         return e.returnValue;
       }
     };
@@ -148,21 +161,21 @@ export default function RegistrationForm() {
     const handlePopState = (e: PopStateEvent) => {
       if (paymentInProgress) {
         const confirmLeave = window.confirm(
-          'Payment in progress. Are you sure you want to leave? This may result in payment without registration.'
+          "Payment in progress. Are you sure you want to leave? This may result in payment without registration."
         );
         if (!confirmLeave) {
           // Push the current state back to prevent navigation
-          window.history.pushState(null, '', window.location.href);
+          window.history.pushState(null, "", window.location.href);
         }
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
     };
   }, [paymentInProgress]);
 
@@ -274,7 +287,10 @@ export default function RegistrationForm() {
   };
 
   // Get price for workshop considering pass limits
-  const getWorkshopPrice = (workshop: Workshop, workshopIndex: number): string => {
+  const getWorkshopPrice = (
+    workshop: Workshop,
+    workshopIndex: number
+  ): string => {
     if (formData.selectedPass && passLimitsInfo) {
       // If this workshop is within the included count, it's free
       if (workshopIndex < passLimitsInfo.workshopsIncluded) {
@@ -324,78 +340,90 @@ export default function RegistrationForm() {
   // Calculate total payment amount
   const calculateTotalAmount = () => {
     let total = 0;
-    
+
     // If pass is selected, charge for pass + additional items
     if (formData.selectedPass && passLimitsInfo) {
-      const selectedPass = passes.find(p => p.id === formData.selectedPass);
+      const selectedPass = passes.find((p) => p.id === formData.selectedPass);
       if (selectedPass) {
         // Add pass cost
         if (isCit) {
-          total += parseInt(selectedPass.citPrice.replace('₹', ''));
+          total += parseInt(selectedPass.citPrice.replace("₹", ""));
         } else {
-          total += parseInt(selectedPass.price.replace('₹', ''));
+          total += parseInt(selectedPass.price.replace("₹", ""));
         }
-        
+
         // Add cost for additional tech events beyond what's included (if selection is enabled)
         if (passLimitsInfo.techEventSelectionEnabled) {
-          const additionalEvents = Math.max(0, formData.selectedEvents.length - passLimitsInfo.techEventsIncluded);
+          const additionalEvents = Math.max(
+            0,
+            formData.selectedEvents.length - passLimitsInfo.techEventsIncluded
+          );
           if (additionalEvents > 0) {
-            formData.selectedEvents.slice(passLimitsInfo.techEventsIncluded).forEach((selectedEvent) => {
-              const event = techEvents.find((e) => e.id === selectedEvent.id);
-              if (event) {
-                if (isCit && event.citPrice) {
-                  total += parseInt(event.citPrice.replace('₹', ''));
-                } else if (event.price) {
-                  total += parseInt(event.price.replace('₹', ''));
+            formData.selectedEvents
+              .slice(passLimitsInfo.techEventsIncluded)
+              .forEach((selectedEvent) => {
+                const event = techEvents.find((e) => e.id === selectedEvent.id);
+                if (event) {
+                  if (isCit && event.citPrice) {
+                    total += parseInt(event.citPrice.replace("₹", ""));
+                  } else if (event.price) {
+                    total += parseInt(event.price.replace("₹", ""));
+                  }
+                }
+              });
+          }
+        }
+
+        // Add cost for additional workshops beyond what's included
+        const additionalWorkshops = Math.max(
+          0,
+          formData.selectedWorkshops.length - passLimitsInfo.workshopsIncluded
+        );
+        if (additionalWorkshops > 0) {
+          formData.selectedWorkshops
+            .slice(passLimitsInfo.workshopsIncluded)
+            .forEach((selectedWorkshop) => {
+              const workshop = workshops.find(
+                (w) => w.id === selectedWorkshop.id
+              );
+              if (workshop) {
+                if (isCit && workshop.citPrice) {
+                  total += parseInt(workshop.citPrice.replace("₹", ""));
+                } else if (workshop.price) {
+                  total += parseInt(workshop.price.replace("₹", ""));
                 }
               }
             });
-          }
-        }
-        
-        // Add cost for additional workshops beyond what's included
-        const additionalWorkshops = Math.max(0, formData.selectedWorkshops.length - passLimitsInfo.workshopsIncluded);
-        if (additionalWorkshops > 0) {
-          formData.selectedWorkshops.slice(passLimitsInfo.workshopsIncluded).forEach((selectedWorkshop) => {
-            const workshop = workshops.find((w) => w.id === selectedWorkshop.id);
-            if (workshop) {
-              if (isCit && workshop.citPrice) {
-                total += parseInt(workshop.citPrice.replace('₹', ''));
-              } else if (workshop.price) {
-                total += parseInt(workshop.price.replace('₹', ''));
-              }
-            }
-          });
         }
       }
       return total;
     }
-    
+
     // Otherwise, charge for individual events and workshops
     // Add tech events cost
     formData.selectedEvents.forEach((selectedEvent) => {
       const event = techEvents.find((e) => e.id === selectedEvent.id);
       if (event) {
         if (isCit && event.citPrice) {
-          total += parseInt(event.citPrice.replace('₹', ''));
+          total += parseInt(event.citPrice.replace("₹", ""));
         } else if (event.price) {
-          total += parseInt(event.price.replace('₹', ''));
+          total += parseInt(event.price.replace("₹", ""));
         }
       }
     });
-    
+
     // Add workshops cost
     formData.selectedWorkshops.forEach((selectedWorkshop) => {
       const workshop = workshops.find((w) => w.id === selectedWorkshop.id);
       if (workshop) {
         if (isCit && workshop.citPrice) {
-          total += parseInt(workshop.citPrice.replace('₹', ''));
+          total += parseInt(workshop.citPrice.replace("₹", ""));
         } else if (workshop.price) {
-          total += parseInt(workshop.price.replace('₹', ''));
+          total += parseInt(workshop.price.replace("₹", ""));
         }
       }
     });
-    
+
     return total;
   };
 
@@ -473,7 +501,8 @@ export default function RegistrationForm() {
       selectedPass: prev.selectedPass === passId ? undefined : passId,
       // If selecting a pass, clear individual workshop selections
       // but keep events since pass allows unlimited events
-      selectedWorkshops: prev.selectedPass === passId ? prev.selectedWorkshops : [],
+      selectedWorkshops:
+        prev.selectedPass === passId ? prev.selectedWorkshops : [],
     }));
   };
 
@@ -529,8 +558,6 @@ export default function RegistrationForm() {
       teamSize: Math.max(1, (prev.teamSize || 1) - 1),
     }));
   };
-
-
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -635,19 +662,22 @@ export default function RegistrationForm() {
 
       // Check if payment is required
       const totalAmount = calculateTotalAmount();
-      
+
       if (totalAmount === 0) {
         // No payment required, directly register
         try {
-          const registrationResponse = await registrationApi.submit(formData, token);
-          
+          const registrationResponse = await registrationApi.submit(
+            formData,
+            token
+          );
+
           if (registrationResponse.success) {
             setSuccessData({
               registrationId: registrationResponse.data.registrationId,
               formData: { ...formData },
               submissionDate: new Date().toLocaleString(),
             });
-            
+
             const eventCount =
               formData.selectedEvents.length +
               formData.selectedWorkshops.length +
@@ -662,7 +692,9 @@ export default function RegistrationForm() {
           }
         } catch (error) {
           console.error("Registration error:", error);
-          toast.error("Registration failed. Please try again or contact support.");
+          toast.error(
+            "Registration failed. Please try again or contact support."
+          );
         } finally {
           setIsSubmitting(false);
         }
@@ -703,12 +735,9 @@ export default function RegistrationForm() {
       }
 
       setPaymentLoading(true);
-      
+
       // Create payment order with dynamic pricing calculation
-      const orderResponse = await paymentApi.createOrder(
-        token,
-        formData
-      );
+      const orderResponse = await paymentApi.createOrder(token, formData);
 
       if (!orderResponse.success || !orderResponse.data) {
         toast.error("Failed to create payment order");
@@ -721,7 +750,7 @@ export default function RegistrationForm() {
 
       // Method 1: Custom CSS to hide QR code (inject after Razorpay modal opens)
       const injectCustomStyles = () => {
-        const style = document.createElement('style');
+        const style = document.createElement("style");
         style.textContent = `
           /* Hide QR code section */
           [data-testid="upi-qr-section"],
@@ -769,9 +798,9 @@ export default function RegistrationForm() {
             console.log("📊 Payment response details:", {
               orderId: response.razorpay_order_id,
               paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature
+              signature: response.razorpay_signature,
             });
-            
+
             // Verify payment
             const verifyResponse = await paymentApi.verifyPayment(
               response,
@@ -782,14 +811,17 @@ export default function RegistrationForm() {
             console.log("🔍 Payment verification response:", verifyResponse);
 
             if (verifyResponse.success) {
-              console.log("✅ Payment verification successful:", verifyResponse.data);
-              
+              console.log(
+                "✅ Payment verification successful:",
+                verifyResponse.data
+              );
+
               setSuccessData({
                 registrationId: verifyResponse.data.registrationId,
                 formData: { ...formData },
                 submissionDate: new Date().toLocaleString(),
               });
-              
+
               const eventCount =
                 formData.selectedEvents.length +
                 formData.selectedWorkshops.length +
@@ -801,16 +833,20 @@ export default function RegistrationForm() {
               );
             } else {
               console.error("❌ Payment verification failed:", verifyResponse);
-              toast.error(verifyResponse.message || "Payment verification failed");
+              toast.error(
+                verifyResponse.message || "Payment verification failed"
+              );
             }
           } catch (error: any) {
             console.error("Payment verification error:", error);
             console.error("Error details:", {
               message: error?.message,
               stack: error?.stack,
-              response: error?.response?.data
+              response: error?.response?.data,
             });
-            toast.error("Payment verification failed. Please contact support with your payment details.");
+            toast.error(
+              "Payment verification failed. Please contact support with your payment details."
+            );
           } finally {
             setPaymentLoading(false);
             setIsSubmitting(false);
@@ -829,24 +865,24 @@ export default function RegistrationForm() {
           // Add callback when modal opens
           onload: () => {
             console.log("🎨 Razorpay modal loaded - applying custom styles");
-            
+
             // Inject custom styles to hide QR code
             setTimeout(() => {
               injectCustomStyles();
             }, 500);
-            
+
             // Additional attempt to hide QR elements
             setTimeout(() => {
               const qrElements = document.querySelectorAll(
                 '[data-testid*="qr"], .qr-code, .rzp-qr, .upi-qr, [class*="qr"]'
               );
-              qrElements.forEach(el => {
+              qrElements.forEach((el) => {
                 if (el && (el as HTMLElement).style) {
-                  (el as HTMLElement).style.display = 'none';
+                  (el as HTMLElement).style.display = "none";
                 }
               });
             }, 1000);
-          }
+          },
         },
         // UPI-only method configuration
         method: {
@@ -856,7 +892,7 @@ export default function RegistrationForm() {
           wallet: true,
         },
         preferred: ["upi"],
-        
+
         prefill: {
           name: formData.name,
           email: formData.email,
@@ -878,32 +914,33 @@ export default function RegistrationForm() {
                 instruments: [
                   {
                     method: "upi",
-                    flows: ["intent"]  // This might help focus on UPI ID input
-                  }
-                ]
-              }
+                    flows: ["intent"], // This might help focus on UPI ID input
+                  },
+                ],
+              },
             },
             hide: [
               {
                 method: "upi",
-                flows: ["qr"]  // Try to hide QR flow
-              }
-            ]
-          }
-        }
+                flows: ["qr"], // Try to hide QR flow
+              },
+            ],
+          },
+        },
       };
 
       // Open Razorpay checkout
       const rzp = new (window as any).Razorpay(options);
-      
+
       // Add custom CSS to hide QR code if it still appears
-      
+
       rzp.open();
       setPaymentLoading(false);
 
       console.log("� Razorpay modal opened - UPI payment flow initiated");
-      console.log("� User will be prompted to enter UPI ID or use other payment methods");
-
+      console.log(
+        "� User will be prompted to enter UPI ID or use other payment methods"
+      );
     } catch (error) {
       console.error("Registration submission error:", error);
       toast.error("Registration failed. Please try again or contact support.");
@@ -988,7 +1025,7 @@ export default function RegistrationForm() {
     <>
       {/* Add the same fixed clock background as other pages */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-          <MinimalClockCollection mainClockSize={420} smallClockCount={5} />
+        <MinimalClockCollection mainClockSize={420} smallClockCount={5} />
         <div className="absolute inset-0 bg-black/60"></div>{" "}
         {/* Overlay for better readability */}
       </div>
@@ -1109,15 +1146,25 @@ export default function RegistrationForm() {
                     <input
                       type="email"
                       required
+                      disabled={isCit}
                       placeholder="Enter your email address"
                       className={`w-full px-4 py-3 bg-white/10 backdrop-blur-sm border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white/15 transition-all duration-300 ${
                         errors.email ? "border-red-400" : "border-white/30"
+                      } ${
+                        isCit
+                          ? "opacity-70 cursor-not-allowed bg-gray-500/20"
+                          : ""
                       }`}
                       value={formData.email}
                       onChange={(e) =>
                         handleInputChange("email", e.target.value)
                       }
                     />
+                    {isCit && (
+                      <p className="text-blue-400 text-xs mt-1">
+                        🔒 Email is locked for CIT students
+                      </p>
+                    )}
                     {errors.email && (
                       <p className="text-red-400 text-sm mt-1">
                         {errors.email}
@@ -1155,15 +1202,26 @@ export default function RegistrationForm() {
                     <input
                       type="text"
                       required
+                      disabled={isCit}
                       placeholder="Enter your college/university name"
                       className={`w-full px-4 py-3 bg-white/10 backdrop-blur-sm border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white/15 transition-all duration-300 ${
                         errors.college ? "border-red-400" : "border-white/30"
+                      } ${
+                        isCit
+                          ? "opacity-70 cursor-not-allowed bg-gray-500/20"
+                          : ""
                       }`}
                       value={formData.college}
                       onChange={(e) =>
                         handleInputChange("college", e.target.value)
                       }
                     />
+                    {isCit && (
+                      <p className="text-blue-400 text-xs mt-1">
+                        🔒 College is set to Chennai Institute Of Technology for
+                        CIT students
+                      </p>
+                    )}
                     {errors.college && (
                       <p className="text-red-400 text-sm mt-1">
                         {errors.college}
@@ -1225,67 +1283,104 @@ export default function RegistrationForm() {
 
                 {/* Technical Events */}
                 <div className="space-y-4 w-full">
-                  <h4 className={`text-lg font-semibold mb-4 flex flex-wrap items-center gap-2 ${
-                    formData.selectedPass && !passLimitsInfo?.techEventSelectionEnabled ? 'text-gray-500' : 'text-blue-400'
-                  }`}>
+                  <h4
+                    className={`text-lg font-semibold mb-4 flex flex-wrap items-center gap-2 ${
+                      formData.selectedPass &&
+                      !passLimitsInfo?.techEventSelectionEnabled
+                        ? "text-gray-500"
+                        : "text-blue-400"
+                    }`}
+                  >
                     <span className="break-words">Technical Events</span>
-                    <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
-                      formData.selectedPass && !passLimitsInfo?.techEventSelectionEnabled
-                        ? 'bg-gray-500/20 text-gray-400' 
-                        : 'bg-blue-500/20 text-blue-300'
-                    }`}>
-                      {formData.selectedPass && !passLimitsInfo?.techEventSelectionEnabled
-                        ? 'Unlimited Access with Pass' 
-                        : formData.selectedPass && passLimitsInfo?.techEventSelectionEnabled
+                    <span
+                      className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
+                        formData.selectedPass &&
+                        !passLimitsInfo?.techEventSelectionEnabled
+                          ? "bg-gray-500/20 text-gray-400"
+                          : "bg-blue-500/20 text-blue-300"
+                      }`}
+                    >
+                      {formData.selectedPass &&
+                      !passLimitsInfo?.techEventSelectionEnabled
+                        ? "Unlimited Access with Pass"
+                        : formData.selectedPass &&
+                          passLimitsInfo?.techEventSelectionEnabled
                         ? `${passLimitsInfo.techEventsIncluded} included + ${passLimitsInfo.maxAdditionalTechEvents} additional`
-                        : (isCit ? "₹59 each (CIT Special)" : "₹99 each")
-                      }
+                        : isCit
+                        ? "₹59 each (CIT Special)"
+                        : "₹99 each"}
                     </span>
                   </h4>
-                  
+
                   {formData.selectedPass && (
                     <div className="mb-4 p-3 bg-blue-500/10 border border-blue-400/30 rounded-lg">
                       <p className="text-blue-300 text-sm">
                         {passLimitsInfo?.techEventSelectionEnabled ? (
                           <>
-                            <strong>🎫 Pass Active:</strong> Select up to {(passLimitsInfo.techEventsIncluded || 0) + (passLimitsInfo.maxAdditionalTechEvents || 0)} technical events!
-                            ({passLimitsInfo.techEventsIncluded || 0} included + {passLimitsInfo.maxAdditionalTechEvents || 0} additional)
+                            <strong>🎫 Pass Active:</strong> Select up to{" "}
+                            {(passLimitsInfo.techEventsIncluded || 0) +
+                              (passLimitsInfo.maxAdditionalTechEvents ||
+                                0)}{" "}
+                            technical events! (
+                            {passLimitsInfo.techEventsIncluded || 0} included +{" "}
+                            {passLimitsInfo.maxAdditionalTechEvents || 0}{" "}
+                            additional)
                             {formData.selectedEvents.length > 0 && (
                               <span className="block text-blue-300 text-xs mt-1">
-                                Selected: {formData.selectedEvents.length}/{(passLimitsInfo.techEventsIncluded || 0) + (passLimitsInfo.maxAdditionalTechEvents || 0)} events
+                                Selected: {formData.selectedEvents.length}/
+                                {(passLimitsInfo.techEventsIncluded || 0) +
+                                  (passLimitsInfo.maxAdditionalTechEvents ||
+                                    0)}{" "}
+                                events
                               </span>
                             )}
                           </>
                         ) : (
                           <>
-                            <strong>🎫 Pass Active:</strong> You have unlimited access to ALL technical events! 
-                            No need to select individual events.
+                            <strong>🎫 Pass Active:</strong> You have unlimited
+                            access to ALL technical events! No need to select
+                            individual events.
                           </>
                         )}
                       </p>
                     </div>
                   )}
-                  
-                  <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 w-full ${
-                    formData.selectedPass && !passLimitsInfo?.techEventSelectionEnabled ? 'opacity-50 pointer-events-none' : ''
-                  }`}>
+
+                  <div
+                    className={`grid grid-cols-1 lg:grid-cols-2 gap-4 w-full ${
+                      formData.selectedPass &&
+                      !passLimitsInfo?.techEventSelectionEnabled
+                        ? "opacity-50 pointer-events-none"
+                        : ""
+                    }`}
+                  >
                     {techEvents.map((event, index) => {
-                      const isSelected = formData.selectedEvents.some(item => item.id === event.id);
-                      const maxEvents = (passLimitsInfo?.techEventsIncluded || 0) + (passLimitsInfo?.maxAdditionalTechEvents || 0);
-                      const isDisabled = Boolean(formData.selectedPass && passLimitsInfo?.techEventSelectionEnabled && 
-                        !isSelected && 
-                        formData.selectedEvents.length >= maxEvents);
-                      const isPassDisabled = Boolean(formData.selectedPass && !passLimitsInfo?.techEventSelectionEnabled);
-                      
+                      const isSelected = formData.selectedEvents.some(
+                        (item) => item.id === event.id
+                      );
+                      const maxEvents =
+                        (passLimitsInfo?.techEventsIncluded || 0) +
+                        (passLimitsInfo?.maxAdditionalTechEvents || 0);
+                      const isDisabled = Boolean(
+                        formData.selectedPass &&
+                          passLimitsInfo?.techEventSelectionEnabled &&
+                          !isSelected &&
+                          formData.selectedEvents.length >= maxEvents
+                      );
+                      const isPassDisabled = Boolean(
+                        formData.selectedPass &&
+                          !passLimitsInfo?.techEventSelectionEnabled
+                      );
+
                       return (
                         <label
                           key={event.id}
                           className={`group relative flex items-start space-x-3 p-4 backdrop-blur-md rounded-xl border transition-all duration-300 w-full overflow-hidden ${
                             isDisabled || isPassDisabled
-                              ? 'bg-gray-800/20 border-gray-600/30 cursor-not-allowed opacity-50'
+                              ? "bg-gray-800/20 border-gray-600/30 cursor-not-allowed opacity-50"
                               : isSelected
-                              ? 'bg-blue-500/20 border-blue-400/50 cursor-pointer'
-                              : 'bg-white/10 border-white/20 hover:bg-white/15 cursor-pointer hover:scale-[1.02]'
+                              ? "bg-blue-500/20 border-blue-400/50 cursor-pointer"
+                              : "bg-white/10 border-white/20 hover:bg-white/15 cursor-pointer hover:scale-[1.02]"
                           }`}
                         >
                           <input
@@ -1303,21 +1398,28 @@ export default function RegistrationForm() {
                                 {event.title}
                               </span>
                               <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded whitespace-nowrap">
-                                {formData.selectedPass 
+                                {formData.selectedPass
                                   ? (() => {
-                                      if (!passLimitsInfo?.techEventSelectionEnabled) {
+                                      if (
+                                        !passLimitsInfo?.techEventSelectionEnabled
+                                      ) {
                                         return "Unlimited Access";
                                       }
-                                      const selectedIndex = formData.selectedEvents.findIndex(e => e.id === event.id);
+                                      const selectedIndex =
+                                        formData.selectedEvents.findIndex(
+                                          (e) => e.id === event.id
+                                        );
                                       if (selectedIndex === -1) {
                                         // Not selected, show normal price
                                         return getPrice(event);
                                       }
                                       // Selected, check if it's within included count
-                                      return selectedIndex < passLimitsInfo.techEventsIncluded ? "Included in Pass" : getPrice(event);
+                                      return selectedIndex <
+                                        passLimitsInfo.techEventsIncluded
+                                        ? "Included in Pass"
+                                        : getPrice(event);
                                     })()
-                                  : getPrice(event)
-                                }
+                                  : getPrice(event)}
                               </span>
                               {event.maxTeamSize && (
                                 <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded whitespace-nowrap">
@@ -1343,53 +1445,71 @@ export default function RegistrationForm() {
 
                 {/* Workshops */}
                 <div className="space-y-4 w-full">
-                  <h4 className={`text-lg font-semibold my-4 flex flex-wrap items-center gap-2 ${
-                    formData.selectedPass ? 'text-gray-500' : 'text-green-400'
-                  }`}>
+                  <h4
+                    className={`text-lg font-semibold my-4 flex flex-wrap items-center gap-2 ${
+                      formData.selectedPass ? "text-gray-500" : "text-green-400"
+                    }`}
+                  >
                     <span className="break-words">Workshops</span>
-                    <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
-                      formData.selectedPass 
-                        ? 'bg-gray-500/20 text-gray-400' 
-                        : 'bg-green-500/20 text-green-300'
-                    }`}>
-                      {formData.selectedPass 
-                        ? 'Included in Pass' 
-                        : (isCit ? "₹100 each (CIT Special)" : "₹100 each")
-                      }
+                    <span
+                      className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
+                        formData.selectedPass
+                          ? "bg-gray-500/20 text-gray-400"
+                          : "bg-green-500/20 text-green-300"
+                      }`}
+                    >
+                      {formData.selectedPass
+                        ? "Included in Pass"
+                        : isCit
+                        ? "₹100 each (CIT Special)"
+                        : "₹100 each"}
                     </span>
                   </h4>
-                  
+
                   {formData.selectedPass && (
                     <div className="mb-4 p-3 bg-green-500/10 border border-green-400/30 rounded-lg">
                       <p className="text-green-300 text-sm">
-                        <strong>🎫 Pass Active:</strong> Select up to {(passLimitsInfo?.workshopsIncluded || 1) + (passLimitsInfo?.maxAdditionalWorkshops || 4)} workshops! 
-                        ({passLimitsInfo?.workshopsIncluded || 1} included + {passLimitsInfo?.maxAdditionalWorkshops || 4} additional)
+                        <strong>🎫 Pass Active:</strong> Select up to{" "}
+                        {(passLimitsInfo?.workshopsIncluded || 1) +
+                          (passLimitsInfo?.maxAdditionalWorkshops || 4)}{" "}
+                        workshops! ({passLimitsInfo?.workshopsIncluded || 1}{" "}
+                        included + {passLimitsInfo?.maxAdditionalWorkshops || 4}{" "}
+                        additional)
                       </p>
                       {formData.selectedWorkshops.length > 0 && (
                         <p className="text-blue-300 text-xs mt-1">
-                          Selected: {formData.selectedWorkshops.length}/{(passLimitsInfo?.workshopsIncluded || 1) + (passLimitsInfo?.maxAdditionalWorkshops || 4)} workshops
+                          Selected: {formData.selectedWorkshops.length}/
+                          {(passLimitsInfo?.workshopsIncluded || 1) +
+                            (passLimitsInfo?.maxAdditionalWorkshops || 4)}{" "}
+                          workshops
                         </p>
                       )}
                     </div>
                   )}
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
                     {workshops.map((workshop, index) => {
-                      const isSelected = formData.selectedWorkshops.some(item => item.id === workshop.id);
-                      const maxWorkshops = (passLimitsInfo?.workshopsIncluded || 1) + (passLimitsInfo?.maxAdditionalWorkshops || 4);
-                      const isDisabled = Boolean(formData.selectedPass && 
-                        !isSelected && 
-                        formData.selectedWorkshops.length >= maxWorkshops);
-                      
+                      const isSelected = formData.selectedWorkshops.some(
+                        (item) => item.id === workshop.id
+                      );
+                      const maxWorkshops =
+                        (passLimitsInfo?.workshopsIncluded || 1) +
+                        (passLimitsInfo?.maxAdditionalWorkshops || 4);
+                      const isDisabled = Boolean(
+                        formData.selectedPass &&
+                          !isSelected &&
+                          formData.selectedWorkshops.length >= maxWorkshops
+                      );
+
                       return (
                         <label
                           key={workshop.id}
                           className={`group relative flex items-start space-x-3 p-4 backdrop-blur-md rounded-xl border transition-all duration-300 w-full overflow-hidden ${
                             isDisabled
-                              ? 'bg-gray-800/20 border-gray-600/30 cursor-not-allowed opacity-50'
+                              ? "bg-gray-800/20 border-gray-600/30 cursor-not-allowed opacity-50"
                               : isSelected
-                              ? 'bg-green-500/20 border-green-400/50 cursor-pointer'
-                              : 'bg-white/10 border-white/20 hover:bg-white/15 cursor-pointer hover:scale-[1.02]'
+                              ? "bg-green-500/20 border-green-400/50 cursor-pointer"
+                              : "bg-white/10 border-white/20 hover:bg-white/15 cursor-pointer hover:scale-[1.02]"
                           }`}
                         >
                           <input
@@ -1407,18 +1527,23 @@ export default function RegistrationForm() {
                                 {workshop.title}
                               </span>
                               <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded whitespace-nowrap">
-                                {formData.selectedPass 
+                                {formData.selectedPass
                                   ? (() => {
-                                      const selectedIndex = formData.selectedWorkshops.findIndex(w => w.id === workshop.id);
+                                      const selectedIndex =
+                                        formData.selectedWorkshops.findIndex(
+                                          (w) => w.id === workshop.id
+                                        );
                                       if (selectedIndex === -1) {
                                         // Not selected, show normal price
                                         return getPrice(workshop);
                                       }
                                       // Selected, check if it's within included count
-                                      return selectedIndex < (passLimitsInfo?.workshopsIncluded || 1) ? "Included in Pass" : getPrice(workshop);
+                                      return selectedIndex <
+                                        (passLimitsInfo?.workshopsIncluded || 1)
+                                        ? "Included in Pass"
+                                        : getPrice(workshop);
                                     })()
-                                  : getPrice(workshop)
-                                }
+                                  : getPrice(workshop)}
                               </span>
                             </div>
                             <p className="text-gray-400 text-sm flex flex-wrap items-center gap-1 mt-1">
@@ -1427,7 +1552,9 @@ export default function RegistrationForm() {
                                 {workshop.venue}
                               </span>
                               <span className="text-gray-500">•</span>
-                              <span className="break-words">{workshop.time}</span>
+                              <span className="break-words">
+                                {workshop.time}
+                              </span>
                             </p>
                             <p className="text-gray-300 text-sm mt-1 break-words">
                               {workshop.description}
@@ -1441,60 +1568,96 @@ export default function RegistrationForm() {
 
                 {/* Non-Tech Events */}
                 <div className="space-y-4 w-full">
-                  <h4 className={`text-lg font-semibold my-4 flex flex-wrap items-center gap-2 ${
-                    formData.selectedPass && !passLimitsInfo?.nonTechEventSelectionEnabled ? 'text-gray-500' : 'text-purple-400'
-                  }`}>
+                  <h4
+                    className={`text-lg font-semibold my-4 flex flex-wrap items-center gap-2 ${
+                      formData.selectedPass &&
+                      !passLimitsInfo?.nonTechEventSelectionEnabled
+                        ? "text-gray-500"
+                        : "text-purple-400"
+                    }`}
+                  >
                     <span className="break-words">Non-Technical Events</span>
-                    <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
-                      formData.selectedPass && !passLimitsInfo?.nonTechEventSelectionEnabled
-                        ? 'bg-gray-500/20 text-gray-400' 
-                        : formData.selectedPass && passLimitsInfo?.nonTechEventSelectionEnabled
-                        ? 'bg-purple-500/20 text-purple-300'
-                        : 'bg-purple-500/20 text-purple-300'
-                    }`}>
-                      {formData.selectedPass && !passLimitsInfo?.nonTechEventSelectionEnabled
-                        ? 'Pay on Arrival' 
-                        : formData.selectedPass && passLimitsInfo?.nonTechEventSelectionEnabled
+                    <span
+                      className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
+                        formData.selectedPass &&
+                        !passLimitsInfo?.nonTechEventSelectionEnabled
+                          ? "bg-gray-500/20 text-gray-400"
+                          : formData.selectedPass &&
+                            passLimitsInfo?.nonTechEventSelectionEnabled
+                          ? "bg-purple-500/20 text-purple-300"
+                          : "bg-purple-500/20 text-purple-300"
+                      }`}
+                    >
+                      {formData.selectedPass &&
+                      !passLimitsInfo?.nonTechEventSelectionEnabled
+                        ? "Pay on Arrival"
+                        : formData.selectedPass &&
+                          passLimitsInfo?.nonTechEventSelectionEnabled
                         ? `${passLimitsInfo.nonTechEventsIncluded} included + ${passLimitsInfo.maxAdditionalNonTechEvents} additional`
-                        : 'Payment on arrival'
-                      }
+                        : "Payment on arrival"}
                     </span>
                   </h4>
-                  
-                  {formData.selectedPass && passLimitsInfo?.nonTechEventSelectionEnabled && (
-                    <div className="mb-4 p-3 bg-purple-500/10 border border-purple-400/30 rounded-lg">
-                      <p className="text-purple-300 text-sm">
-                        <strong>🎫 Pass Active:</strong> Select up to {(passLimitsInfo.nonTechEventsIncluded || 0) + (passLimitsInfo.maxAdditionalNonTechEvents || 0)} non-technical events!
-                        ({passLimitsInfo.nonTechEventsIncluded || 0} included + {passLimitsInfo.maxAdditionalNonTechEvents || 0} additional)
-                        {formData.selectedNonTechEvents.length > 0 && (
-                          <span className="block text-purple-300 text-xs mt-1">
-                            Selected: {formData.selectedNonTechEvents.length}/{(passLimitsInfo.nonTechEventsIncluded || 0) + (passLimitsInfo.maxAdditionalNonTechEvents || 0)} events
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 w-full ${
-                    formData.selectedPass && !passLimitsInfo?.nonTechEventSelectionEnabled ? 'opacity-50 pointer-events-none' : ''
-                  }`}>
+
+                  {formData.selectedPass &&
+                    passLimitsInfo?.nonTechEventSelectionEnabled && (
+                      <div className="mb-4 p-3 bg-purple-500/10 border border-purple-400/30 rounded-lg">
+                        <p className="text-purple-300 text-sm">
+                          <strong>🎫 Pass Active:</strong> Select up to{" "}
+                          {(passLimitsInfo.nonTechEventsIncluded || 0) +
+                            (passLimitsInfo.maxAdditionalNonTechEvents ||
+                              0)}{" "}
+                          non-technical events! (
+                          {passLimitsInfo.nonTechEventsIncluded || 0} included +{" "}
+                          {passLimitsInfo.maxAdditionalNonTechEvents || 0}{" "}
+                          additional)
+                          {formData.selectedNonTechEvents.length > 0 && (
+                            <span className="block text-purple-300 text-xs mt-1">
+                              Selected: {formData.selectedNonTechEvents.length}/
+                              {(passLimitsInfo.nonTechEventsIncluded || 0) +
+                                (passLimitsInfo.maxAdditionalNonTechEvents ||
+                                  0)}{" "}
+                              events
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                  <div
+                    className={`grid grid-cols-1 lg:grid-cols-2 gap-4 w-full ${
+                      formData.selectedPass &&
+                      !passLimitsInfo?.nonTechEventSelectionEnabled
+                        ? "opacity-50 pointer-events-none"
+                        : ""
+                    }`}
+                  >
                     {nonTechEvents.map((event, index) => {
-                      const isSelected = formData.selectedNonTechEvents.some(item => item.id === event.id);
-                      const maxEvents = (passLimitsInfo?.nonTechEventsIncluded || 0) + (passLimitsInfo?.maxAdditionalNonTechEvents || 0);
-                      const isDisabled = Boolean(formData.selectedPass && passLimitsInfo?.nonTechEventSelectionEnabled && 
-                        !isSelected && 
-                        formData.selectedNonTechEvents.length >= maxEvents);
-                      const isPassDisabled = Boolean(formData.selectedPass && !passLimitsInfo?.nonTechEventSelectionEnabled);
-                      
+                      const isSelected = formData.selectedNonTechEvents.some(
+                        (item) => item.id === event.id
+                      );
+                      const maxEvents =
+                        (passLimitsInfo?.nonTechEventsIncluded || 0) +
+                        (passLimitsInfo?.maxAdditionalNonTechEvents || 0);
+                      const isDisabled = Boolean(
+                        formData.selectedPass &&
+                          passLimitsInfo?.nonTechEventSelectionEnabled &&
+                          !isSelected &&
+                          formData.selectedNonTechEvents.length >= maxEvents
+                      );
+                      const isPassDisabled = Boolean(
+                        formData.selectedPass &&
+                          !passLimitsInfo?.nonTechEventSelectionEnabled
+                      );
+
                       return (
                         <label
                           key={event.id}
                           className={`group relative flex items-start space-x-3 p-4 backdrop-blur-md rounded-xl border transition-all duration-300 w-full overflow-hidden ${
                             isDisabled || isPassDisabled
-                              ? 'bg-gray-800/20 border-gray-600/30 cursor-not-allowed opacity-50'
+                              ? "bg-gray-800/20 border-gray-600/30 cursor-not-allowed opacity-50"
                               : isSelected
-                              ? 'bg-purple-500/20 border-purple-400/50 cursor-pointer'
-                              : 'bg-white/10 border-white/20 hover:bg-white/15 cursor-pointer hover:scale-[1.02]'
+                              ? "bg-purple-500/20 border-purple-400/50 cursor-pointer"
+                              : "bg-white/10 border-white/20 hover:bg-white/15 cursor-pointer hover:scale-[1.02]"
                           }`}
                         >
                           <input
@@ -1513,24 +1676,34 @@ export default function RegistrationForm() {
                             <div className="flex items-center justify-between mt-1">
                               <p className="text-gray-400 text-sm flex flex-wrap items-center gap-1">
                                 <MapPin className="w-3 h-3 flex-shrink-0" />
-                                <span className="break-words">{event.venue}</span>
+                                <span className="break-words">
+                                  {event.venue}
+                                </span>
                               </p>
                               <span className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded whitespace-nowrap">
-                                {formData.selectedPass 
+                                {formData.selectedPass
                                   ? (() => {
-                                      if (!passLimitsInfo?.nonTechEventSelectionEnabled) {
+                                      if (
+                                        !passLimitsInfo?.nonTechEventSelectionEnabled
+                                      ) {
                                         return "Pay on Arrival";
                                       }
-                                      const selectedIndex = formData.selectedNonTechEvents.findIndex(e => e.id === event.id);
+                                      const selectedIndex =
+                                        formData.selectedNonTechEvents.findIndex(
+                                          (e) => e.id === event.id
+                                        );
                                       if (selectedIndex === -1) {
                                         // Not selected, show normal behavior
                                         return "Pay on Arrival";
                                       }
                                       // Selected, check if it's within included count
-                                      return selectedIndex < (passLimitsInfo.nonTechEventsIncluded || 0) ? "Included in Pass" : "Pay on Arrival";
+                                      return selectedIndex <
+                                        (passLimitsInfo.nonTechEventsIncluded ||
+                                          0)
+                                        ? "Included in Pass"
+                                        : "Pay on Arrival";
                                     })()
-                                  : "Pay on arrival"
-                                }
+                                  : "Pay on arrival"}
                               </span>
                             </div>
                           </div>
@@ -1549,11 +1722,12 @@ export default function RegistrationForm() {
                     Best Value!
                   </span>
                 </h3>
-                
+
                 <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-400/30 rounded-lg">
                   <p className="text-yellow-300 text-sm">
-                    <strong>💡 Smart Choice:</strong> Get unlimited access to ALL technical events + choose any ONE workshop! 
-                    Perfect for maximum flexibility and savings.
+                    <strong>💡 Smart Choice:</strong> Get unlimited access to
+                    ALL technical events + choose any ONE workshop! Perfect for
+                    maximum flexibility and savings.
                   </p>
                 </div>
 
@@ -1563,8 +1737,8 @@ export default function RegistrationForm() {
                       key={pass.id}
                       className={`group relative flex items-start space-x-3 p-4 sm:p-6 backdrop-blur-md rounded-xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] w-full overflow-hidden ${
                         formData.selectedPass === pass.id
-                          ? 'bg-yellow-500/20 border-yellow-400/70 shadow-lg shadow-yellow-400/20'
-                          : 'bg-white/10 border-white/20 hover:bg-white/15'
+                          ? "bg-yellow-500/20 border-yellow-400/70 shadow-lg shadow-yellow-400/20"
+                          : "bg-white/10 border-white/20 hover:bg-white/15"
                       }`}
                     >
                       <input
@@ -1589,42 +1763,61 @@ export default function RegistrationForm() {
                             )}
                           </div>
                         </div>
-                        
+
                         <p className="text-gray-300 text-sm mb-3 break-words">
                           {pass.description}
                         </p>
-                        
+
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                           <div>
-                            <h5 className="text-white font-medium mb-2">✨ What's Included:</h5>
+                            <h5 className="text-white font-medium mb-2">
+                              ✨ What's Included:
+                            </h5>
                             <ul className="text-sm text-gray-300 space-y-1">
                               {pass.includes.slice(0, 3).map((item, index) => (
-                                <li key={index} className="flex items-start gap-1">
-                                  <span className="text-yellow-400 flex-shrink-0">•</span>
+                                <li
+                                  key={index}
+                                  className="flex items-start gap-1"
+                                >
+                                  <span className="text-yellow-400 flex-shrink-0">
+                                    •
+                                  </span>
                                   <span className="break-words">{item}</span>
                                 </li>
                               ))}
                             </ul>
                           </div>
-                          
+
                           <div>
-                            <h5 className="text-white font-medium mb-2">🎯 Key Benefits:</h5>
+                            <h5 className="text-white font-medium mb-2">
+                              🎯 Key Benefits:
+                            </h5>
                             <ul className="text-sm text-gray-300 space-y-1">
-                              {pass.benefits.slice(0, 3).map((benefit, index) => (
-                                <li key={index} className="flex items-start gap-1">
-                                  <span className="text-green-400 flex-shrink-0">✓</span>
-                                  <span className="break-words">{benefit}</span>
-                                </li>
-                              ))}
+                              {pass.benefits
+                                .slice(0, 3)
+                                .map((benefit, index) => (
+                                  <li
+                                    key={index}
+                                    className="flex items-start gap-1"
+                                  >
+                                    <span className="text-green-400 flex-shrink-0">
+                                      ✓
+                                    </span>
+                                    <span className="break-words">
+                                      {benefit}
+                                    </span>
+                                  </li>
+                                ))}
                             </ul>
                           </div>
                         </div>
-                        
+
                         {formData.selectedPass === pass.id && (
                           <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-400/30 rounded-lg">
                             <p className="text-yellow-300 text-sm font-medium">
-                              🎉 Pass Selected! You can now participate in unlimited technical events. 
-                              Workshop selection will be available on event day.
+                              🎉 Pass Selected! You can now participate in
+                              unlimited technical events. Workshop selection
+                              will be available on event day.
                             </p>
                           </div>
                         )}
@@ -1632,17 +1825,27 @@ export default function RegistrationForm() {
                     </label>
                   ))}
                 </div>
-                
+
                 {formData.selectedPass && (
                   <div className="mt-4 p-4 bg-blue-500/10 border border-blue-400/30 rounded-lg">
                     <div className="flex items-start gap-2">
                       <span className="text-blue-400 text-xl">ℹ️</span>
                       <div>
-                        <h5 className="text-blue-300 font-medium mb-1">Important Notes:</h5>
+                        <h5 className="text-blue-300 font-medium mb-1">
+                          Important Notes:
+                        </h5>
                         <ul className="text-blue-200 text-sm space-y-1">
-                          <li>• You can still select technical events below (all included in your pass)</li>
-                          <li>• Workshop selection disabled - choose any workshop on event day</li>
-                          <li>• Non-technical events can be added separately</li>
+                          <li>
+                            • You can still select technical events below (all
+                            included in your pass)
+                          </li>
+                          <li>
+                            • Workshop selection disabled - choose any workshop
+                            on event day
+                          </li>
+                          <li>
+                            • Non-technical events can be added separately
+                          </li>
                         </ul>
                       </div>
                     </div>
@@ -1794,22 +1997,24 @@ export default function RegistrationForm() {
                           Technical Events ({formData.selectedEvents.length})
                         </h4>
                         <ul className="space-y-2">
-                          {formData.selectedEvents.map((selectedEvent, index) => {
-                            const event = techEvents.find(
-                              (e) => e.id === selectedEvent.id
-                            );
-                            return event ? (
-                              <li
-                                key={selectedEvent.id}
-                                className="text-sm text-white break-words"
-                              >
-                                • {selectedEvent.title}{" "}
-                                <span className="text-green-300">
-                                  ({getTechEventPrice(event, index)})
-                                </span>
-                              </li>
-                            ) : null;
-                          })}
+                          {formData.selectedEvents.map(
+                            (selectedEvent, index) => {
+                              const event = techEvents.find(
+                                (e) => e.id === selectedEvent.id
+                              );
+                              return event ? (
+                                <li
+                                  key={selectedEvent.id}
+                                  className="text-sm text-white break-words"
+                                >
+                                  • {selectedEvent.title}{" "}
+                                  <span className="text-green-300">
+                                    ({getTechEventPrice(event, index)})
+                                  </span>
+                                </li>
+                              ) : null;
+                            }
+                          )}
                         </ul>
                       </div>
                     )}
@@ -1895,7 +2100,7 @@ export default function RegistrationForm() {
                     </svg>
                     <span className="break-words">Payment Summary</span>
                   </h3>
-                  
+
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20 mb-4">
                     <div className="space-y-3">
                       {/* Pass-based billing */}
@@ -1903,100 +2108,183 @@ export default function RegistrationForm() {
                         <>
                           {/* Pass cost */}
                           {(() => {
-                            const selectedPass = passes.find(p => p.id === formData.selectedPass);
+                            const selectedPass = passes.find(
+                              (p) => p.id === formData.selectedPass
+                            );
                             if (!selectedPass) return null;
-                            const passPrice = isCit ? selectedPass.citPrice : selectedPass.price;
+                            const passPrice = isCit
+                              ? selectedPass.citPrice
+                              : selectedPass.price;
                             return (
                               <div className="flex justify-between items-center text-white">
-                                <span className="text-sm font-medium">{selectedPass.title}</span>
-                                <span className="font-medium text-yellow-400">{passPrice}</span>
+                                <span className="text-sm font-medium">
+                                  {selectedPass.title}
+                                </span>
+                                <span className="font-medium text-yellow-400">
+                                  {passPrice}
+                                </span>
                               </div>
                             );
                           })()}
-                          
+
                           {/* Additional tech events beyond included count (if enabled) */}
-                          {passLimitsInfo.techEventSelectionEnabled && 
-                           formData.selectedEvents.slice(passLimitsInfo.techEventsIncluded).map((selectedEvent, index) => {
-                            const event = techEvents.find((e) => e.id === selectedEvent.id);
-                            if (!event) return null;
-                            const price = getPrice(event);
-                            return (
-                              <div key={`additional-event-${event.id}`} className="flex justify-between items-center text-white">
-                                <span className="text-sm">{event.title} (Additional)</span>
-                                <span className="font-medium text-blue-400">{price}</span>
-                              </div>
-                            );
-                          })}
-                          
+                          {passLimitsInfo.techEventSelectionEnabled &&
+                            formData.selectedEvents
+                              .slice(passLimitsInfo.techEventsIncluded)
+                              .map((selectedEvent, index) => {
+                                const event = techEvents.find(
+                                  (e) => e.id === selectedEvent.id
+                                );
+                                if (!event) return null;
+                                const price = getPrice(event);
+                                return (
+                                  <div
+                                    key={`additional-event-${event.id}`}
+                                    className="flex justify-between items-center text-white"
+                                  >
+                                    <span className="text-sm">
+                                      {event.title} (Additional)
+                                    </span>
+                                    <span className="font-medium text-blue-400">
+                                      {price}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+
                           {/* Additional non-tech events beyond included count (if enabled) */}
-                          {passLimitsInfo.nonTechEventSelectionEnabled && 
-                           formData.selectedNonTechEvents.slice(passLimitsInfo.nonTechEventsIncluded).map((selectedEvent, index) => {
-                            const event = nonTechEvents.find((e) => e.id === selectedEvent.id);
-                            if (!event) return null;
-                            return (
-                              <div key={`additional-nontech-${event.id}`} className="flex justify-between items-center text-white">
-                                <span className="text-sm">{event.title} (Additional)</span>
-                                <span className="font-medium text-purple-400">Pay on Arrival</span>
-                              </div>
-                            );
-                          })}
-                          
+                          {passLimitsInfo.nonTechEventSelectionEnabled &&
+                            formData.selectedNonTechEvents
+                              .slice(passLimitsInfo.nonTechEventsIncluded)
+                              .map((selectedEvent, index) => {
+                                const event = nonTechEvents.find(
+                                  (e) => e.id === selectedEvent.id
+                                );
+                                if (!event) return null;
+                                return (
+                                  <div
+                                    key={`additional-nontech-${event.id}`}
+                                    className="flex justify-between items-center text-white"
+                                  >
+                                    <span className="text-sm">
+                                      {event.title} (Additional)
+                                    </span>
+                                    <span className="font-medium text-purple-400">
+                                      Pay on Arrival
+                                    </span>
+                                  </div>
+                                );
+                              })}
+
                           {/* Additional workshops beyond included count */}
-                          {formData.selectedWorkshops.slice(passLimitsInfo.workshopsIncluded).map((selectedWorkshop, index) => {
-                            const workshop = workshops.find((w) => w.id === selectedWorkshop.id);
-                            if (!workshop) return null;
-                            const price = getPrice(workshop);
-                            return (
-                              <div key={`additional-workshop-${workshop.id}`} className="flex justify-between items-center text-white">
-                                <span className="text-sm">{workshop.title} (Additional)</span>
-                                <span className="font-medium text-green-400">{price}</span>
-                              </div>
-                            );
-                          })}
-                          
+                          {formData.selectedWorkshops
+                            .slice(passLimitsInfo.workshopsIncluded)
+                            .map((selectedWorkshop, index) => {
+                              const workshop = workshops.find(
+                                (w) => w.id === selectedWorkshop.id
+                              );
+                              if (!workshop) return null;
+                              const price = getPrice(workshop);
+                              return (
+                                <div
+                                  key={`additional-workshop-${workshop.id}`}
+                                  className="flex justify-between items-center text-white"
+                                >
+                                  <span className="text-sm">
+                                    {workshop.title} (Additional)
+                                  </span>
+                                  <span className="font-medium text-green-400">
+                                    {price}
+                                  </span>
+                                </div>
+                              );
+                            })}
+
                           {/* Show included items for clarity */}
-                          {(formData.selectedEvents.slice(0, passLimitsInfo.techEventsIncluded).length > 0 ||
-                            formData.selectedWorkshops.slice(0, passLimitsInfo.workshopsIncluded).length > 0 ||
-                            formData.selectedNonTechEvents.slice(0, passLimitsInfo.nonTechEventsIncluded).length > 0 ||
+                          {(formData.selectedEvents.slice(
+                            0,
+                            passLimitsInfo.techEventsIncluded
+                          ).length > 0 ||
+                            formData.selectedWorkshops.slice(
+                              0,
+                              passLimitsInfo.workshopsIncluded
+                            ).length > 0 ||
+                            formData.selectedNonTechEvents.slice(
+                              0,
+                              passLimitsInfo.nonTechEventsIncluded
+                            ).length > 0 ||
                             !passLimitsInfo.techEventSelectionEnabled) && (
                             <>
                               <hr className="border-white/20" />
                               <div className="text-gray-400 text-sm">
-                                <span className="font-medium">Included in Pass:</span>
+                                <span className="font-medium">
+                                  Included in Pass:
+                                </span>
                                 <ul className="mt-1 space-y-1">
                                   {/* Included tech events */}
                                   {passLimitsInfo.techEventSelectionEnabled ? (
-                                    formData.selectedEvents.slice(0, passLimitsInfo.techEventsIncluded).map((selectedEvent) => {
-                                      const event = techEvents.find((e) => e.id === selectedEvent.id);
-                                      return event ? (
-                                        <li key={`included-event-${event.id}`} className="text-xs">
-                                          • {event.title}
-                                        </li>
-                                      ) : null;
-                                    })
+                                    formData.selectedEvents
+                                      .slice(
+                                        0,
+                                        passLimitsInfo.techEventsIncluded
+                                      )
+                                      .map((selectedEvent) => {
+                                        const event = techEvents.find(
+                                          (e) => e.id === selectedEvent.id
+                                        );
+                                        return event ? (
+                                          <li
+                                            key={`included-event-${event.id}`}
+                                            className="text-xs"
+                                          >
+                                            • {event.title}
+                                          </li>
+                                        ) : null;
+                                      })
                                   ) : (
-                                    <li className="text-xs">• Unlimited access to all technical events</li>
+                                    <li className="text-xs">
+                                      • Unlimited access to all technical events
+                                    </li>
                                   )}
                                   {/* Included workshops */}
-                                  {formData.selectedWorkshops.slice(0, passLimitsInfo.workshopsIncluded).map((selectedWorkshop) => {
-                                    const workshop = workshops.find((w) => w.id === selectedWorkshop.id);
-                                    return workshop ? (
-                                      <li key={`included-workshop-${workshop.id}`} className="text-xs">
-                                        • {workshop.title}
-                                      </li>
-                                    ) : null;
-                                  })}
+                                  {formData.selectedWorkshops
+                                    .slice(0, passLimitsInfo.workshopsIncluded)
+                                    .map((selectedWorkshop) => {
+                                      const workshop = workshops.find(
+                                        (w) => w.id === selectedWorkshop.id
+                                      );
+                                      return workshop ? (
+                                        <li
+                                          key={`included-workshop-${workshop.id}`}
+                                          className="text-xs"
+                                        >
+                                          • {workshop.title}
+                                        </li>
+                                      ) : null;
+                                    })}
                                   {/* Included non-tech events */}
-                                  {passLimitsInfo.nonTechEventSelectionEnabled && 
-                                   formData.selectedNonTechEvents.slice(0, passLimitsInfo.nonTechEventsIncluded).map((selectedEvent) => {
-                                    const event = nonTechEvents.find((e) => e.id === selectedEvent.id);
-                                    return event ? (
-                                      <li key={`included-nontech-${event.id}`} className="text-xs">
-                                        • {event.title}
-                                      </li>
-                                    ) : null;
-                                  })}
-                                  <li className="text-xs">• Unlimited access to all technical events</li>
+                                  {passLimitsInfo.nonTechEventSelectionEnabled &&
+                                    formData.selectedNonTechEvents
+                                      .slice(
+                                        0,
+                                        passLimitsInfo.nonTechEventsIncluded
+                                      )
+                                      .map((selectedEvent) => {
+                                        const event = nonTechEvents.find(
+                                          (e) => e.id === selectedEvent.id
+                                        );
+                                        return event ? (
+                                          <li
+                                            key={`included-nontech-${event.id}`}
+                                            className="text-xs"
+                                          >
+                                            • {event.title}
+                                          </li>
+                                        ) : null;
+                                      })}
+                                  <li className="text-xs">
+                                    • Unlimited access to all technical events
+                                  </li>
                                 </ul>
                               </div>
                             </>
@@ -2007,43 +2295,64 @@ export default function RegistrationForm() {
                           {/* Individual billing (no pass) */}
                           {/* Selected Events */}
                           {formData.selectedEvents.map((selectedEvent) => {
-                            const event = techEvents.find((e) => e.id === selectedEvent.id);
+                            const event = techEvents.find(
+                              (e) => e.id === selectedEvent.id
+                            );
                             if (!event) return null;
                             const price = getPrice(event);
                             return (
-                              <div key={`event-${event.id}`} className="flex justify-between items-center text-white">
+                              <div
+                                key={`event-${event.id}`}
+                                className="flex justify-between items-center text-white"
+                              >
                                 <span className="text-sm">{event.title}</span>
-                                <span className="font-medium text-green-400">{price}</span>
+                                <span className="font-medium text-green-400">
+                                  {price}
+                                </span>
                               </div>
                             );
                           })}
-                          
+
                           {/* Selected Workshops */}
-                          {formData.selectedWorkshops.map((selectedWorkshop) => {
-                            const workshop = workshops.find((w) => w.id === selectedWorkshop.id);
-                            if (!workshop) return null;
-                            const price = getPrice(workshop);
-                            return (
-                              <div key={`workshop-${workshop.id}`} className="flex justify-between items-center text-white">
-                                <span className="text-sm">{workshop.title}</span>
-                                <span className="font-medium text-green-400">{price}</span>
-                              </div>
-                            );
-                          })}
+                          {formData.selectedWorkshops.map(
+                            (selectedWorkshop) => {
+                              const workshop = workshops.find(
+                                (w) => w.id === selectedWorkshop.id
+                              );
+                              if (!workshop) return null;
+                              const price = getPrice(workshop);
+                              return (
+                                <div
+                                  key={`workshop-${workshop.id}`}
+                                  className="flex justify-between items-center text-white"
+                                >
+                                  <span className="text-sm">
+                                    {workshop.title}
+                                  </span>
+                                  <span className="font-medium text-green-400">
+                                    {price}
+                                  </span>
+                                </div>
+                              );
+                            }
+                          )}
                         </>
                       )}
-                      
+
                       <hr className="border-white/20" />
                       <div className="flex justify-between items-center text-white font-bold text-lg">
                         <span>Total Amount</span>
-                        <span className="text-yellow-400">₹{calculateTotalAmount()}</span>
+                        <span className="text-yellow-400">
+                          ₹{calculateTotalAmount()}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="text-center">
                     <p className="text-gray-300 text-sm mb-4">
-                      Payment will be processed securely through Razorpay after form submission
+                      Payment will be processed securely through Razorpay after
+                      form submission
                     </p>
                   </div>
                 </div>
@@ -2236,10 +2545,9 @@ export default function RegistrationForm() {
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      {calculateTotalAmount() > 0 
+                      {calculateTotalAmount() > 0
                         ? `Pay ₹${calculateTotalAmount()} & Complete Registration`
-                        : 'Complete Registration'
-                      }
+                        : "Complete Registration"}
                     </>
                   )}
                 </button>
