@@ -672,19 +672,23 @@ export default function RegistrationForm() {
           );
 
           if (registrationResponse.success) {
+            // Log the full response for debugging
+            console.log("Free registration response:", registrationResponse);
+            
+            const registrationId = registrationResponse.data?.registrationId || "MISSING_ID";
+            const eventCount = registrationResponse.data?.eventCount || 
+                             (formData.selectedEvents.length +
+                              formData.selectedWorkshops.length +
+                              formData.selectedNonTechEvents.length);
+            
             setSuccessData({
-              registrationId: registrationResponse.data.registrationId,
+              registrationId: registrationId,
               formData: { ...formData },
               submissionDate: new Date().toLocaleString(),
             });
 
-            const eventCount =
-              formData.selectedEvents.length +
-              formData.selectedWorkshops.length +
-              formData.selectedNonTechEvents.length;
-
             toast.success(
-              `Registration completed successfully! Registration ID: ${registrationResponse.data.registrationId}. Events registered: ${eventCount}. No payment required.`,
+              `Registration completed successfully! Registration ID: ${registrationId}. Events registered: ${eventCount}. No payment required.`,
               { duration: 8000 }
             );
           } else {
@@ -1427,12 +1431,6 @@ export default function RegistrationForm() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-gray-400 text-sm flex flex-wrap items-center gap-1 mt-1">
-                              <MapPin className="w-3 h-3 flex-shrink-0" />
-                              <span className="break-words">{event.venue}</span>
-                              <span className="text-gray-500">•</span>
-                              <span className="break-words">{event.time}</span>
-                            </p>
                             <p className="text-gray-300 text-sm mt-1 break-words">
                               {event.description}
                             </p>
@@ -1546,16 +1544,6 @@ export default function RegistrationForm() {
                                   : getPrice(workshop)}
                               </span>
                             </div>
-                            <p className="text-gray-400 text-sm flex flex-wrap items-center gap-1 mt-1">
-                              <MapPin className="w-3 h-3 flex-shrink-0" />
-                              <span className="break-words">
-                                {workshop.venue}
-                              </span>
-                              <span className="text-gray-500">•</span>
-                              <span className="break-words">
-                                {workshop.time}
-                              </span>
-                            </p>
                             <p className="text-gray-300 text-sm mt-1 break-words">
                               {workshop.description}
                             </p>
@@ -1670,23 +1658,15 @@ export default function RegistrationForm() {
                             className="w-5 h-5 text-purple-600 bg-white/10 border-white/30 rounded focus:ring-purple-500 flex-shrink-0 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
                             <span className="text-white font-medium group-hover:text-purple-300 transition-colors block break-words">
                               {event.title}
                             </span>
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="text-gray-400 text-sm flex flex-wrap items-center gap-1">
-                                <MapPin className="w-3 h-3 flex-shrink-0" />
-                                <span className="break-words">
-                                  {event.venue}
-                                </span>
-                              </p>
                               <span className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded whitespace-nowrap">
                                 {formData.selectedPass
                                   ? (() => {
-                                      if (
-                                        !passLimitsInfo?.nonTechEventSelectionEnabled
-                                      ) {
-                                        return "Pay on Arrival";
+                                      if (!passLimitsInfo?.nonTechEventSelectionEnabled) {
+                                        return `Pay on Arrival ${event.price}`;
                                       }
                                       const selectedIndex =
                                         formData.selectedNonTechEvents.findIndex(
@@ -1694,18 +1674,18 @@ export default function RegistrationForm() {
                                         );
                                       if (selectedIndex === -1) {
                                         // Not selected, show normal behavior
-                                        return "Pay on Arrival";
+                                        return `Pay on Arrival ${event.price}`;
                                       }
                                       // Selected, check if it's within included count
-                                      return selectedIndex <
-                                        (passLimitsInfo.nonTechEventsIncluded ||
-                                          0)
-                                        ? "Included in Pass"
-                                        : "Pay on Arrival";
+                                      return selectedIndex < (passLimitsInfo.nonTechEventsIncluded || 0) ? "Included in Pass" : `Pay on Arrival ${event.price}`;
                                     })()
-                                  : "Pay on arrival"}
+                                  : `Pay on Arrival ${event.price}`
+                                }
                               </span>
                             </div>
+                            <p className="text-gray-300 text-sm mt-1 break-words">
+                              {event.description}
+                            </p>
                           </div>
                         </label>
                       );
