@@ -39,6 +39,18 @@ export interface Workshop {
   syllabus?: string[];
 }
 
+// Pass types
+export interface Pass {
+  id: number;
+  title: string;
+  description: string;
+  benefits: string[];
+  price: string; // Regular price
+  citPrice: string; // CIT student price
+  terms: string[];
+  includes: string[];
+}
+
 // Registration types
 export interface TeamMember {
   name: string;
@@ -72,6 +84,9 @@ export interface RegistrationFormData {
   selectedEvents: SelectedItem[];
   selectedWorkshops: SelectedItem[];
   selectedNonTechEvents: SelectedItem[];
+
+  // Pass selection
+  selectedPass?: number; // Pass ID if selected
 
   // Payment details
   transactionIds: Record<string, string>; // Flexible structure for individual event/workshop transaction IDs

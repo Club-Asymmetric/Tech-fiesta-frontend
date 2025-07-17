@@ -112,6 +112,19 @@ export const workshopsApi = {
   },
 };
 
+// Passes API
+export const passesApi = {
+  getAll: async () => {
+    const response = await apiRequest("/passes");
+    return response.data;
+  },
+
+  getById: async (id: number) => {
+    const response = await apiRequest(`/passes/${id}`);
+    return response.data;
+  },
+};
+
 // Registration API
 export const registrationApi = {
   checkDuplicate: async (email: string, whatsapp: string, token: string) => {
@@ -150,5 +163,6 @@ export const registrationApi = {
 export default {
   eventsApi,
   workshopsApi,
+  passesApi,
   registrationApi,
 };
