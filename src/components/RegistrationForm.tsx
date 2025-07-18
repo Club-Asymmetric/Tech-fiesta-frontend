@@ -2702,7 +2702,21 @@ export default function RegistrationForm() {
                   +91 8438190166
                 </a>
                 <a
+                  href="tel:+8438190166"
+                  className="flex items-center text-blue-400 hover:text-blue-300 transition-colors break-words"
+                >
+                  <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
+                  +91 9245435888
+                </a>
+                <a
                   href="https://wa.me/8438190166"
+                  className="flex items-center text-green-400 hover:text-green-300 transition-colors break-words"
+                >
+                  <FaWhatsapp className="w-4 h-4 mr-2 flex-shrink-0" />
+                  WhatsApp Support
+                </a>
+                <a
+                  href="https://wa.me/9245435888"
                   className="flex items-center text-green-400 hover:text-green-300 transition-colors break-words"
                 >
                   <FaWhatsapp className="w-4 h-4 mr-2 flex-shrink-0" />

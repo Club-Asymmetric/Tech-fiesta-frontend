@@ -419,7 +419,7 @@ const AnimatedText = ({
         >
           <div className="text-center px-4">
             <h2 className="coming-soon-text text-base sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-wider text-gray-200 text-glow font-sans">
-              {"Coming Soon".split("").map((char, index) => (
+              {"30.07.2025".split("").map((char, index) => (
                 <span
                   key={`coming-soon-${index}`}
                   className={`inline-block ${
