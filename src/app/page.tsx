@@ -154,7 +154,7 @@ export default function Home() {
                     >
                       <div className="rounded-lg p-6">
                         <div className="text-3xl font-bold text-purple-400 mb-2">
-                          500+
+                          1500+
                         </div>
                         <div className="text-gray-300">Attendees Expected</div>
                       </div>
@@ -190,9 +190,9 @@ export default function Home() {
                     >
                       <div className="rounded-lg p-6">
                         <div className="text-3xl font-bold text-green-400 mb-2">
-                          3
+                          1
                         </div>
-                        <div className="text-gray-300">Days of Innovation</div>
+                        <div className="text-gray-300">Day of Complete Innovation</div>
                       </div>
                     </GlareHover>
                   </div>
