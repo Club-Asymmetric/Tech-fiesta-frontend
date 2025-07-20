@@ -129,7 +129,7 @@ export const workshops: Workshop[] = [
   {
     id: 6,
     title: "Money Masters",
-    category: "Finance Technology",
+    category: "Finance",
     level: "Beginner" as const,
     duration: "1 - 1.5 hours",
     description:
