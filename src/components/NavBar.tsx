@@ -222,6 +222,12 @@ export default function NavBar() {
                 >
                   Register
                 </button>
+                <button
+                  className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
+                  onClick={() => window.location.href = "/downloads"}
+                >
+                  Downloads
+                </button>
               </div>
             </div>
           </div>
