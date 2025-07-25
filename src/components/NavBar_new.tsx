@@ -1,0 +1,266 @@
+"use client";
+
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import GooeyNav from "./ReactBits/GooeyNav/GooeyNav";
+
+export default function NavBar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+    // Close mobile menu if open
+    setIsMenuOpen(false);
+  };
+
+  // Define navigation items for GooeyNav
+  const navItems = [
+    { label: "About", href: "#about" },
+    { label: "Events", href: "#events" },
+    { label: "Workshops", href: "#workshops" },
+    { label: "Register", href: "/registration" },
+    { label: "Downloads", href: "/downloads" }
+  ];
+
+  // Handle navigation clicks
+  const handleNavClick = (href: string) => {
+    if (href.startsWith("#")) {
+      // Section navigation
+      if (pathname === "/") {
+        // Already on homepage, scroll to section
+        const sectionId = href.replace("#", "");
+        scrollToSection(sectionId);
+      } else {
+        // Not on homepage, navigate to homepage with hash
+        router.push(`/${href}`);
+      }
+    } else if (href.startsWith("/")) {
+      // Page navigation
+      router.push(href);
+    }
+  };
+
+  return (
+    <>
+      {/* CIT Logo - Fixed top-left corner */}
+      <div className="fixed top-4 left-4 z-50 pointer-events-auto">
+        <a 
+          href="https://www.citchennai.edu.in/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="block"
+        >
+          <img 
+            src="/CITLogo.png" 
+            alt="Chennai Institute of Technology" 
+            className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain hover:scale-110 transition-transform duration-200 drop-shadow-lg cursor-pointer"
+          />
+        </a>
+      </div>
+
+      {pathname === "/" ? (
+        // Full navbar for homepage
+        <>
+          <nav className="fixed top-4 left-0 z-50 w-full flex justify-center pointer-events-none animate-[slideDown_0.4s_ease-out_forwards]">
+            <style jsx>{`
+              @keyframes slideDown {
+                from {
+                  transform: translateY(-100%);
+                  opacity: 0;
+                }
+                to {
+                  transform: translateY(0);
+                  opacity: 1;
+                }
+              }
+              .glassmorphism {
+                background: rgba(10, 10, 10, 0.9);
+              }
+              @keyframes slideInFromTop {
+                from {
+                  transform: translateY(-20px);
+                  opacity: 0;
+                }
+                to {
+                  transform: translateY(0);
+                  opacity: 1;
+                }
+              }
+              @keyframes fadeIn {
+                from {
+                  opacity: 0;
+                }
+                to {
+                  opacity: 1;
+                }
+              }
+              .mobile-nav-button {
+                background: rgba(255, 255, 255, 0.25);
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                transition: all 0.2s ease;
+                box-shadow: 0 3px 15px rgba(0, 0, 0, 0.15);
+              }
+              .mobile-nav-button:active {
+                background: rgba(255, 255, 255, 0.35);
+                transform: scale(0.98);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+              }
+              .mobile-overlay {
+                animation: fadeIn 0.2s ease-out forwards;
+              }
+            `}</style>
+
+            {/* Main navbar container */}
+            <div className="glassmorphism rounded-full px-4 py-3 relative overflow-hidden pointer-events-auto max-w-4xl w-full mx-3 sm:mx-4 flex justify-center">
+              <div className="flex items-center justify-between w-full">
+                {/* Asymmetric Logo */}
+                <div className="flex-shrink-0 relative top-1 sm:top-0.5">
+                  <a
+                    href="https://asymmetric-livid.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 hover:scale-x-110 transition-transform duration-200"
+                  >
+                    <img 
+                      src="/assNo_00000.png" 
+                      alt="Asymmetric Logo" 
+                      className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0"
+                    />
+                    <h1 className="text-base sm:text-lg lg:text-xl font-bold tracking-wider cursor-pointer bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent transition-all duration-300 leading-none flex items-center">
+                      Asymmetric
+                    </h1>
+                  </a>
+                </div>
+
+                {/* Desktop GooeyNav */}
+                <div className="hidden lg:flex flex-1 justify-center pl-10">
+                  <div 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const target = e.target as HTMLElement;
+                      const anchor = target.closest('a');
+                      if (anchor && anchor.getAttribute('href')) {
+                        handleNavClick(anchor.getAttribute('href')!);
+                      }
+                    }}
+                  >
+                    <GooeyNav 
+                      items={navItems}
+                      initialActiveIndex={0}
+                    />
+                  </div>
+                </div>
+
+                {/* Mobile Hamburger Menu */}
+                <div className="lg:hidden flex items-center justify-center">
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="p-2 relative z-10 rounded-md hover:bg-white/10 transition-colors duration-200"
+                    aria-label="Toggle menu"
+                  >
+                    {!isMenuOpen ? (
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M4 6h16M4 12h16M4 18h16"></path>
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </nav>
+          
+          {/* Mobile Menu Overlay and Dropdown - only show on homepage */}
+          {isMenuOpen && (
+            <>
+              {/* Semi-transparent overlay */}
+              <div
+                className="lg:hidden fixed inset-0 bg-black/25 backdrop-blur-sm z-40 mobile-overlay"
+                onClick={() => setIsMenuOpen(false)}
+              ></div>
+
+              {/* Mobile menu */}
+              <div className="lg:hidden fixed top-20 left-3 right-3 z-50 pointer-events-auto">
+                <div className="mobile-glassmorphism rounded-xl px-4 py-4">
+                  <div className="grid grid-cols-1 gap-2.5">
+                    <button
+                      className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
+                      onClick={() => handleNavClick("#about")}
+                    >
+                      About
+                    </button>
+                    <button
+                      className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
+                      onClick={() => handleNavClick("#events")}
+                    >
+                      Events
+                    </button>
+                    <button
+                      className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
+                      onClick={() => handleNavClick("#workshops")}
+                    >
+                      Workshops
+                    </button>
+                    <button
+                      className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
+                      onClick={() => handleNavClick("/registration")}
+                    >
+                      Register
+                    </button>
+                    <button
+                      className="mobile-nav-button text-white px-4 py-3.5 rounded-lg text-sm font-medium text-center w-full"
+                      onClick={() => handleNavClick("/downloads")}
+                    >
+                      Downloads
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        // Simple back button for other pages
+        <div className="fixed top-4 right-4 z-50 pointer-events-auto">
+          <button
+            onClick={() => router.push("/")}
+            className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 flex items-center gap-2 shadow-lg"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
+          </button>
+        </div>
+      )}
+    </>
+  );
+}

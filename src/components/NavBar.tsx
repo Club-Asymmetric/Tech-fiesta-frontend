@@ -24,6 +24,7 @@ export default function NavBar() {
     { label: "Events", href: "#events" },
     { label: "Workshops", href: "#workshops" },
     { label: "Register", href: "/registration" },
+    { label: "Downloads", href: "/downloads" }
   ];
 
   // Handle navigation clicks
@@ -107,7 +108,7 @@ export default function NavBar() {
         `}</style>
 
         {/* Main navbar container */}
-        <div className="glassmorphism rounded-full px-4 py-3 relative overflow-hidden pointer-events-auto max-w-3xl w-full mx-3 sm:mx-4 flex justify-center">
+        <div className="glassmorphism rounded-full px-4 py-3 relative overflow-hidden pointer-events-auto max-w-4xl w-full mx-3 sm:mx-4 flex justify-center">
           <div className="flex items-center justify-between w-full">
             {/* Asymmetric Logo */}
             <div className="flex-shrink-0 relative top-1 sm:top-0.5">
