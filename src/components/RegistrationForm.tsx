@@ -1020,6 +1020,12 @@ export default function RegistrationForm() {
     });
   };
 
+const canRegister =
+  !!formData.selectedPass ||
+  formData.selectedEvents.length > 0 ||
+  formData.selectedWorkshops.length > 0 ||
+  formData.selectedNonTechEvents.length > 0;
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -2420,6 +2426,12 @@ export default function RegistrationForm() {
 
               {/* Submit Button */}
               <div className="text-center w-full">
+                {/* Show message if no event is selected */}
+                {!canRegister && (
+                  <p className="text-red-400 font-semibold mb-4">
+                    Please select a pass or at least one event, workshop, or non-tech event to register.
+                  </p>
+                )}
                 <button
                   type="submit"
                   disabled={
@@ -2428,7 +2440,8 @@ export default function RegistrationForm() {
                     isCheckingDuplicates ||
                     paymentLoading ||
                     paymentInProgress ||
-                    successData !== null
+                    successData !== null ||
+                    !canRegister
                   }
                   className="w-full max-w-md mx-auto py-4 px-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-lg rounded-xl hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
                 >
