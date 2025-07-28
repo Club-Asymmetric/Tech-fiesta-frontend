@@ -67,7 +67,7 @@ export const events: Event[] = [
     citPrice: "₹59",
     maxTeamSize: 2,
   },
-  
+
   // Non-Technical Events
   {
     id: 7,
@@ -96,15 +96,15 @@ export const events: Event[] = [
     tags: ["Public Speaking", "Spontaneity", "Communication", "Fun"],
     price: "₹79",
   },
-  {
-    id: 10,
-    title: "CHESS",
-    type: "non-tech" as const,
-    description:
-      "Test your strategic thinking and patience in a classic chess tournament. Compete against fellow participants and prove your mastery of the game.",
-    tags: ["Strategy", "Board Game", "Competition", "Logic"],
-    price: "₹79",
-  },
+  // {
+  //   id: 10,
+  //   title: "CHESS",
+  //   type: "non-tech" as const,
+  //   description:
+  //     "Test your strategic thinking and patience in a classic chess tournament. Compete against fellow participants and prove your mastery of the game.",
+  //   tags: ["Strategy", "Board Game", "Competition", "Logic"],
+  //   price: "₹79",
+  // },
   {
     id: 11,
     title: "Best Photography",
